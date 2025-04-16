@@ -1,0 +1,20 @@
+# Terraform
+us-region/.terraform/
+us-region/*.tfstate
+us-region/*.tfstate.backup
+us-region/.terraform.lock.hcl
+
+# Crash logs
+crash.log
+
+# Ignore override files
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore sensitive or system-specific files
+.terraformrc
+terraform.rc
