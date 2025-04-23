@@ -40,3 +40,23 @@ resource "aws_eks_cluster" "this" {
     aws_iam_role_policy_attachment.eks_cluster_policy
   ]
 }
+
+#Adding Add-Ons
+resource "aws_eks_addon" "core-dns" {
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "coredns"
+  addon_version               = var.coredns-version
+  resolve_conflicts_on_update = "PRESERVE"
+}
+resource "aws_eks_addon" "kube-proxy" {
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "kube-proxy"
+  addon_version               = var.kube-proxy-version
+  resolve_conflicts_on_update = "PRESERVE"
+}
+resource "aws_eks_addon" "vpc-cni" {
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "vpc-cni"
+  addon_version               = var.vpc-cni-version
+  resolve_conflicts_on_update = "PRESERVE"
+}

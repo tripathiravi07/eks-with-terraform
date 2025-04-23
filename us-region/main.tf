@@ -21,8 +21,11 @@ output "all_subnets" {
 
 #Creating EKS Cluster
 module "eks_cluster" {
-  source = "../modules/eks"
-  cluster_name = "eks-with-terraform"
+  source             = "../modules/eks"
+  cluster_name       = "eks-with-terraform"
   kubernetes_version = "1.32"
-  subnet_ids =  module.vpc_network.all_subnet_ids
+  subnet_ids         = module.vpc_network.all_subnet_ids
+  coredns-version    = "v1.11.4-eksbuild.2"
+  kube-proxy-version = "v1.32.0-eksbuild.2"
+  vpc-cni-version    = "v1.19.2-eksbuild.5"
 }
