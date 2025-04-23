@@ -30,3 +30,8 @@ variable "kube-proxy-version" {
 variable "vpc-cni-version" {
   type = string
 }
+
+variable "node_subnet_ids" {
+  description = "List of subnet IDs for EKS worker nodes"
+  type        = list(string)
+}

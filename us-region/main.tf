@@ -28,4 +28,5 @@ module "eks_cluster" {
   coredns-version    = "v1.11.4-eksbuild.2"
   kube-proxy-version = "v1.32.0-eksbuild.2"
   vpc-cni-version    = "v1.19.2-eksbuild.5"
+  node_subnet_ids = module.vpc_network.private_subnets
 }
