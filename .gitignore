@@ -2,6 +2,7 @@
 us-region/.terraform/
 us-region/*.tfstate
 us-region/*.tfstate.backup
+us-region/*.tfstate.*.backup
 us-region/.terraform.lock.hcl
 
 # Crash logs
