@@ -29,4 +29,5 @@ module "eks_cluster" {
   kube-proxy-version = "v1.32.0-eksbuild.2"
   vpc-cni-version    = "v1.19.2-eksbuild.5"
   node_subnet_ids    = module.vpc_network.private_subnets
+  vpc_id             = module.vpc_network.vpc_id
 }

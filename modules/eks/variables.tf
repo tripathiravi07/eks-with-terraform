@@ -35,3 +35,7 @@ variable "node_subnet_ids" {
   description = "List of subnet IDs for EKS worker nodes"
   type        = list(string)
 }
+
+variable "vpc_id" {
+  type = string
+}
