@@ -2,7 +2,11 @@
 module "vpc_network" {
   source   = "../modules/vpc"
   vpc_cidr = "10.0.0.0/16"
+  public   = var.public
+  private  = var.private
 }
+
+#OutPut From VPC Module which is consumed by EKS Cluster Resources
 output "vpc_module_id" {
   value = module.vpc_network.vpc_id
 }

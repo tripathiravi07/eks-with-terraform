@@ -1,5 +1,5 @@
 locals {
-  name = "eks-vpc"
+  name = "eks-vpc-terraform"
   team = "devops"
 }
 
@@ -95,7 +95,7 @@ resource "aws_subnet" "eks-public-subnets" {
   }
 }
 
-# Subnets 3 private
+# Subnets, 3 private
 resource "aws_subnet" "eks-private-subnets" {
   for_each          = var.private
   vpc_id            = aws_vpc.eks-vpc.id
