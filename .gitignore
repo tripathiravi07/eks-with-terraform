@@ -2,7 +2,7 @@
 us-region/.terraform/
 us-region/*.tfstate
 us-region/*.tfstate.backup
-us-region/*.tfstate.*.backup
+us-region/terraform.tfstate.*.backup
 us-region/.terraform.lock.hcl
 us-region/terraform.tfstate.1746637296.backup
 
