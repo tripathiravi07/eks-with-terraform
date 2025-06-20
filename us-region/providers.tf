@@ -13,12 +13,12 @@ provider "aws" {
 
 provider "kubernetes" {
   config_path    = "~/.kube/config"
-  config_context = "arn:aws:eks:us-east-1:053097998829:cluster/eks-with-terraform"
+  config_context = module.eks.cluster.arn
 }
 
 provider "helm" {
   kubernetes {
     config_path    = "~/.kube/config"
-    config_context = "arn:aws:eks:us-east-1:053097998829:cluster/eks-with-terraform"
+    config_context = module.eks.cluster.arn
   }
 }
