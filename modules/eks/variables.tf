@@ -39,3 +39,15 @@ variable "node_subnet_ids" {
 variable "vpc_id" {
   type = string
 }
+
+variable "karpenter_version" {
+
+  type = string
+  default = "1.5.1"
+  
+}
+
+variable "aws_region" {
+  type = string
+  default = "us-east-1"
+}

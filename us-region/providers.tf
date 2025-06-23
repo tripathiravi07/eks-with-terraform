@@ -13,12 +13,12 @@ provider "aws" {
 
 provider "kubernetes" {
   config_path    = "~/.kube/config"
-  config_context = module.eks.cluster.arn
+  config_context = module.eks_cluster.eks_cluster_arn
 }
 
 provider "helm" {
   kubernetes {
     config_path    = "~/.kube/config"
-    config_context = module.eks.cluster.arn
+    config_context = module.eks_cluster.eks_cluster_arn
   }
 }

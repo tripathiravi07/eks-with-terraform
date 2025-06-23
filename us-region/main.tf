@@ -35,3 +35,7 @@ module "eks_cluster" {
   node_subnet_ids    = module.vpc_network.private_subnets
   vpc_id             = module.vpc_network.vpc_id
 }
+
+output "eks_arn" {
+  value = module.eks_cluster.eks_cluster_arn
+}
