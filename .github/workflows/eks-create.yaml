@@ -1,0 +1,4 @@
+name: EKS Cluster Provisioning
+on: push
+jobs:
+    manage-eks: 
