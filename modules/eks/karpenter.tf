@@ -157,3 +157,40 @@ resource "helm_release" "karpenter" {
 #     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
 #     value = aws_iam_role.karpenter_controller.arn
 #   }
+
+
+# Read Cluster SG
+data "aws_eks_cluster" "cluster-sg" {
+  name = var.cluster_name
+  
+}
+
+#Karpenter SG
+resource "aws_security_group" "karpenter_sg" {
+  name        = "karpenter-sg"
+  description = "Security group for Karpenter-managed nodes"
+  vpc_id      = var.vpc_id
+
+  # Allow all traffic within the VPC
+  ingress {
+    description      = "Allow internal VPC traffic"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    security_groups = [ data.aws_eks_cluster.cluster-sg.vpc_config[0].cluster_security_group_id]
+  }
+
+  # Allow outbound to the internet (e.g., for pulling images, AWS APIs)
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name                        = "karpenter-sg"
+    "karpenter.sh/discovery"   = aws_eks_cluster.eks-terraform.name
+  }
+}

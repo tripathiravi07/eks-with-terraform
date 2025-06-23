@@ -167,7 +167,7 @@
         {
             "Sid": "AllowInterruptionQueueActions",
             "Effect": "Allow",
-            "Resource": "arn:aws:sqs:us-east-1:053097998829:raviptri-karpenter-demo",
+            "Resource": "arn:aws:sqs:us-east-1:053097998829:eks-with-terraform",
             "Action": [
                 "sqs:DeleteMessage",
                 "sqs:GetQueueUrl",
@@ -177,7 +177,7 @@
         {
             "Sid": "AllowPassingInstanceRole",
             "Effect": "Allow",
-            "Resource": "arn:aws:iam::053097998829:role/KarpenterNodeRole-raviptri-karpenter-demo",
+            "Resource": "arn:aws:iam::053097998829:role/KarpenterNodeRole-eks-with-terraform",
             "Action": "iam:PassRole",
             "Condition": {
                 "StringEquals": {

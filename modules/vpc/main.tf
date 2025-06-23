@@ -1,6 +1,7 @@
 locals {
   name = "eks-vpc-terraform"
   team = "devops"
+  discovery = "eks-with-terraform"
 }
 
 resource "aws_vpc" "eks-vpc" {
@@ -104,6 +105,6 @@ resource "aws_subnet" "eks-private-subnets" {
   tags = {
     Name = "Private-${each.key}"
     team = local.team
+    "karpenter.sh/discovery" = local.discovery
   }
 }
-
