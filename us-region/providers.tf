@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.93.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.7.1"  # ✅ Required for kubernetes {} block inside helm
+    }
   }
 }
 
