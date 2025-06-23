@@ -11,14 +11,38 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# provider "kubernetes" {
+#   config_path    = "~/.kube/config"
+#   config_context = module.eks_cluster.eks_cluster_arn
+# }
+
+# provider "helm" {
+#   kubernetes {
+#     config_path    = "~/.kube/config"
+#     config_context = module.eks_cluster.eks_cluster_arn
+#   }
+# }
+
 provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = module.eks_cluster.eks_cluster_arn
+  host                   = module.eks_cluster.eks_cluster_ep
+  cluster_ca_certificate = base64decode(module.eks_cluster.eks_cluster_ca)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", module.eks_cluster.eks_cluster_name]
+  }
 }
 
 provider "helm" {
   kubernetes {
-    config_path    = "~/.kube/config"
+    host                   = module.eks_cluster.eks_cluster_ep
+    cluster_ca_certificate = base64decode(module.eks_cluster.eks_cluster_ca)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", module.eks_cluster.eks_cluster_name]
+    }
     config_context = module.eks_cluster.eks_cluster_arn
   }
 }
