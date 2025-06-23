@@ -163,7 +163,7 @@ resource "helm_release" "karpenter" {
 # Read Cluster SG
 data "aws_eks_cluster" "cluster-sg" {
   name = var.cluster_name
-  
+  depends_on = [ aws_eks_cluster.eks-terraform ]
 }
 
 #Karpenter SG
