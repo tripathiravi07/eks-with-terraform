@@ -4,7 +4,7 @@ output "eks_cluster_arn" {
 
 # Outputs
 output "karpenter_iam_role" {
-  value = aws_iam_role.karpenter-controller-irsa-role,
+  value = aws_iam_role.karpenter-controller-irsa-role
 }
 
 output "karpenter_node_instance_profile_name" {
