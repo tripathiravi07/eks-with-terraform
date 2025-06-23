@@ -6,7 +6,7 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.7.1"  # ✅ Required for kubernetes {} block inside helm
+      version = "~> 2.7.1"
     }
   }
 }
