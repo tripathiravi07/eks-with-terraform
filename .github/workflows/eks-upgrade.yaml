@@ -152,7 +152,42 @@ jobs:
             git add variables.tf
             git commit -m "chore: update cluster_version to ${LATEST_VERSION} after EKS upgrade"
             git push origin main
-
+            - name: Upgrade EKS Add-ons
+            if: env.UPGRADE_NEEDED == 'true'
+            run: |
+              echo "🔍 Listing installed add-ons for cluster: $CLUSTER_NAME"
+              ADDONS=$(aws eks list-addons --cluster-name $CLUSTER_NAME --region $REGION | jq -r '.addons[]')
+          
+              if [ -z "$ADDONS" ]; then
+                echo "⚠️ No add-ons found in the cluster."
+                exit 0
+              fi
+          
+              for ADDON in $ADDONS; do
+                echo "🔄 Checking latest version for add-on: $ADDON"
+          
+                LATEST_VERSION=$(aws eks describe-addon-versions \
+                  --addon-name $ADDON \
+                  --kubernetes-version $LATEST_VERSION \
+                  --region $REGION \
+                  | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+                if [ -z "$LATEST_VERSION" ]; then
+                  echo "❌ Could not find compatible version for $ADDON"
+                  continue
+                fi
+          
+                echo "⬆️ Upgrading $ADDON to version $LATEST_VERSION..."
+                aws eks update-addon \
+                  --cluster-name $CLUSTER_NAME \
+                  --addon-name $ADDON \
+                  --addon-version $LATEST_VERSION \
+                  --resolve-conflicts OVERWRITE \
+                  --region $REGION
+          
+                echo "✅ Add-on $ADDON upgrade initiated."
+              done
+              
       - name: Post-Upgrade Validation
         if: env.UPGRADE_NEEDED == 'true'
         run: |
@@ -161,3 +196,26 @@ jobs:
           kubectl get nodes
           kubectl get pods -A
           echo "✅ Cluster upgrade completed and verified."
+      
+          - name: Upgrade EKS Node Groups (Rolling)
+          if: env.UPGRADE_NEEDED == 'true'
+          run: |
+            echo "🔍 Listing node groups in cluster: $CLUSTER_NAME"
+            
+            NODEGROUPS=$(aws eks list-nodegroups --cluster-name $CLUSTER_NAME --region $REGION | jq -r '.nodegroups[]')
+        
+            if [ -z "$NODEGROUPS" ]; then
+              echo "⚠️ No node groups found in the cluster."
+              exit 1
+            fi
+        
+            for NODEGROUP in $NODEGROUPS; do
+              echo "⬆️ Updating node group: $NODEGROUP"
+              aws eks update-nodegroup-version \
+                --cluster-name "$CLUSTER_NAME" \
+                --nodegroup-name "$NODEGROUP" \
+                --region "$REGION" \
+                --no-force
+        
+              echo "✅ Node group $NODEGROUP update initiated."
+            done
