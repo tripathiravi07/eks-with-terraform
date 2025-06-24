@@ -95,30 +95,30 @@ jobs:
       - name: Pre-Upgrade Check - Cluster, Nodes, Pods Health
         if: env.UPGRADE_NEEDED == 'true'
         run: |
-          echo "Checking if EKS cluster is ACTIVE..."
-          CLUSTER_STATUS=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.status')
-          if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
-            echo "❌ Cluster is not in ACTIVE state: $CLUSTER_STATUS"
-            exit 1
-          fi
-
-          echo "Checking for nodes not in Ready state..."
-          NOT_READY_NODES=$(kubectl get nodes | grep -v ' Ready ' | grep -v 'NAME')
-          if [ -n "$NOT_READY_NODES" ]; then
-            echo "❌ Found nodes not in Ready state:"
-            echo "$NOT_READY_NODES"
-            exit 1
-          fi
-
-          echo "Checking for pods not in Running state..."
-          NOT_RUNNING_PODS=$(kubectl get pods -A | grep -v ' Running ' | grep -v 'NAMESPACE')
-          if [ -n "$NOT_RUNNING_PODS" ]; then
-            echo "❌ Found pods not in Running state:"
-            echo "$NOT_RUNNING_PODS"
-            exit 1
-          fi
-
-          echo "✅ Pre-upgrade checks passed."
+            echo "Checking if EKS cluster is ACTIVE..."
+            CLUSTER_STATUS=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.status')
+            if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+              echo "❌ Cluster is not in ACTIVE state: $CLUSTER_STATUS"
+              exit 1
+            fi
+        
+            echo "Checking for nodes not in Ready state..."
+            NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
+            if [ -n "$NOT_READY_NODES" ]; then
+              echo "❌ Found nodes not in Ready state:"
+              echo "$NOT_READY_NODES"
+              exit 1
+            fi
+        
+            echo "Checking for pods not in Running state..."
+            NOT_RUNNING_PODS=$(kubectl get pods -A --no-headers | awk '$4 != "Running"')
+            if [ -n "$NOT_RUNNING_PODS" ]; then
+              echo "❌ Found pods not in Running state:"
+              echo "$NOT_RUNNING_PODS"
+              exit 1
+            fi
+        
+            echo "✅ Pre-upgrade checks passed."
 
       - name: Write upgrade.auto.tfvars with latest version
         if: env.UPGRADE_NEEDED == 'true'
