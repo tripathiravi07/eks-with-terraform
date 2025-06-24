@@ -1,4 +1,4 @@
-name: EKS Upgrade Checker and Upgrader
+name: Installing K8S Components
 
 on:
   workflow_dispatch:
