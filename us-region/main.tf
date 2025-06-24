@@ -1,4 +1,4 @@
-##Creating VPC
+##Creating VPC for EKS Cluster
 module "vpc_network" {
   source   = "../modules/vpc"
   vpc_cidr = "10.0.0.0/16"
@@ -23,7 +23,7 @@ output "all_subnets" {
   value = module.vpc_network.all_subnet_ids
 }
 
-#Creating EKS Cluster
+#Creating EKS Cluster 
 module "eks_cluster" {
   source             = "../modules/eks"
   cluster_name       = "eks-with-terraform"
