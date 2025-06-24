@@ -44,9 +44,9 @@ jobs:
           chmod +x ./kubectl
           mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
 
-      - name: Initialize Terraform (read-only)
+      - name: Initialize Terraform with backend
         working-directory: ${{ env.TF_DIR }}
-        run: terraform init -backend=false
+        run: terraform init -reconfigur
 
       - name: Get EKS Cluster Name from Terraform Output
         id: get-cluster
