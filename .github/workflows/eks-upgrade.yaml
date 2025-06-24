@@ -33,15 +33,16 @@ jobs:
           gpg --no-default-keyring \
           --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
           --fingerprint
-          
+
           sudo apt update
           sudo apt-get install terraform
           echo "Verifying Installation"
           terraform -help
 
           echo "Installing kubectl..."
-          curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+          curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.32.3/2025-04-17/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
 
       - name: Initialize Terraform (read-only)
         working-directory: ${{ env.TF_DIR }}
