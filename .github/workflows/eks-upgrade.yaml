@@ -134,6 +134,24 @@ jobs:
         if: env.UPGRADE_NEEDED == 'true'
         working-directory: ${{ env.TF_DIR }}
         run: terraform apply -auto-approve -var-file=upgrade.auto.tfvars
+      
+      - name: Post-Upgrade - Update variables.tf with new version
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ./us-region
+        run: |
+          echo "🔧 Updating 'cluster_version' in variables.tf to $LATEST_VERSION"
+          sed -i "s/^\(\s*default\s*=\s*\"\)[^\"]*\(\"\)/\1${LATEST_VERSION}\2/" variables.tf
+          echo "✅ variables.tf updated"
+      
+      - name: Commit updated variables.tf
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ./us-region
+        run: |
+            git config --global user.email "actions@github.com"
+            git config --global user.name "GitHub Actions"
+            git add variables.tf
+            git commit -m "chore: update cluster_version to ${LATEST_VERSION} after EKS upgrade"
+            git push origin main
 
       - name: Post-Upgrade Validation
         if: env.UPGRADE_NEEDED == 'true'
