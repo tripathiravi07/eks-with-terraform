@@ -3,10 +3,14 @@ name: EKS Upgrade Checker and Upgrader
 on:
   workflow_dispatch:
 
+permissions: write-all
+
 jobs:
   eks-upgrade:
     name: Check and Upgrade EKS Version via Terraform
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       REGION: us-east-1
       TF_DIR: ./us-region
