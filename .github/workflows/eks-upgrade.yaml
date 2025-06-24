@@ -161,7 +161,7 @@ jobs:
         if: env.UPGRADE_NEEDED == 'true'
         run: |
               echo "🔍 Listing installed add-ons for cluster: $CLUSTER_NAME"
-              ADDONS=$(aws eks list-addons --cluster-name $CLUSTER_NAME --region $REGION | jq -r '.addons[]')
+              ADDONS=$(aws eks list-addons --cluster-name "$CLUSTER_NAME" --region "$REGION" | jq -r '.addons[]')
           
               if [ -z "$ADDONS" ]; then
                 echo "⚠️ No add-ons found in the cluster."
@@ -171,26 +171,26 @@ jobs:
               for ADDON in $ADDONS; do
                 echo "🔄 Checking latest version for add-on: $ADDON"
           
-                LATEST_VERSION=$(aws eks describe-addon-versions \
-                  --addon-name $ADDON \
-                  --kubernetes-version $LATEST_VERSION \
-                  --region $REGION \
+                ADDON_VERSION=$(aws eks describe-addon-versions \
+                  --addon-name "$ADDON" \
+                  --kubernetes-version "$LATEST_VERSION" \
+                  --region "$REGION" \
                   | jq -r '.addons[0].addonVersions[0].addonVersion')
           
-                if [ -z "$LATEST_VERSION" ]; then
-                  echo "❌ Could not find compatible version for $ADDON"
+                if [ -z "$ADDON_VERSION" ] || [ "$ADDON_VERSION" == "null" ]; then
+                  echo "❌ Could not find a compatible version for $ADDON with Kubernetes $LATEST_VERSION"
                   continue
                 fi
           
-                echo "⬆️ Upgrading $ADDON to version $LATEST_VERSION..."
+                echo "⬆️ Upgrading $ADDON to version $ADDON_VERSION..."
                 aws eks update-addon \
-                  --cluster-name $CLUSTER_NAME \
-                  --addon-name $ADDON \
-                  --addon-version $LATEST_VERSION \
+                  --cluster-name "$CLUSTER_NAME" \
+                  --addon-name "$ADDON" \
+                  --addon-version "$ADDON_VERSION" \
                   --resolve-conflicts OVERWRITE \
-                  --region $REGION
+                  --region "$REGION"
           
-                echo "✅ Add-on $ADDON upgrade initiated."
+                echo "✅ Add-on $ADDON upgrade to version $ADDON_VERSION initiated."
               done
 
       - name: Post-Upgrade Validation
