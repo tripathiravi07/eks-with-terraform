@@ -1,0 +1,137 @@
+name: EKS Upgrade Checker and Upgrader
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eks-upgrade:
+    name: Check and Upgrade EKS Version via Terraform
+    runs-on: ubuntu-latest
+    env:
+      REGION: us-east-1
+      TF_DIR: ./us-region
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Install Dependencies (Terraform 1.5.7, kubectl, jq)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip jq curl
+
+          echo "Installing Terraform 1.5.7..."
+          curl -LO https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
+          unzip terraform_1.5.7_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+
+          echo "Installing kubectl..."
+          curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+
+      - name: Initialize Terraform (read-only)
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform init -backend=false
+
+      - name: Get EKS Cluster Name from Terraform Output
+        id: get-cluster
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
+          echo "EKS Cluster Name: $CLUSTER_NAME"
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+
+      - name: Get Current EKS Version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.version')
+          echo "Current EKS Version: $CURRENT_VERSION"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Get Latest Available EKS Version
+        id: latest-version
+        run: |
+          LATEST_VERSION=$(aws eks describe-cluster-versions --region $REGION | jq -r '.clusterVersions[0].clusterVersion')
+          echo "Latest Available EKS Version: $LATEST_VERSION"
+          echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+
+      - name: Check if Upgrade is Needed
+        id: upgrade-check
+        run: |
+          if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+            echo "EKS cluster is already up to date."
+            echo "UPGRADE_NEEDED=false" >> $GITHUB_ENV
+          else
+            echo "Upgrade available from $CURRENT_VERSION to $LATEST_VERSION."
+            echo "UPGRADE_NEEDED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Exit if No Upgrade Needed
+        if: env.UPGRADE_NEEDED == 'false'
+        run: |
+          echo "Exiting workflow - EKS is already on latest version."
+          exit 0
+
+      - name: Update Kubeconfig
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+
+      - name: Pre-Upgrade Check - Cluster, Nodes, Pods Health
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          echo "Checking if EKS cluster is ACTIVE..."
+          CLUSTER_STATUS=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.status')
+          if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+            echo "❌ Cluster is not in ACTIVE state: $CLUSTER_STATUS"
+            exit 1
+          fi
+
+          echo "Checking for nodes not in Ready state..."
+          NOT_READY_NODES=$(kubectl get nodes | grep -v ' Ready ' | grep -v 'NAME')
+          if [ -n "$NOT_READY_NODES" ]; then
+            echo "❌ Found nodes not in Ready state:"
+            echo "$NOT_READY_NODES"
+            exit 1
+          fi
+
+          echo "Checking for pods not in Running state..."
+          NOT_RUNNING_PODS=$(kubectl get pods -A | grep -v ' Running ' | grep -v 'NAMESPACE')
+          if [ -n "$NOT_RUNNING_PODS" ]; then
+            echo "❌ Found pods not in Running state:"
+            echo "$NOT_RUNNING_PODS"
+            exit 1
+          fi
+
+          echo "✅ Pre-upgrade checks passed."
+
+      - name: Write upgrade.auto.tfvars with latest version
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          echo "cluster_version = \"${LATEST_VERSION}\"" > $TF_DIR/upgrade.auto.tfvars
+
+      - name: Terraform Plan - Upgrade EKS Version
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform plan -var-file=upgrade.auto.tfvars
+
+      - name: Terraform Apply - Upgrade EKS Version
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -auto-approve -var-file=upgrade.auto.tfvars
+
+      - name: Post-Upgrade Validation
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          echo "Waiting for cluster upgrade to stabilize..."
+          sleep 120
+          kubectl get nodes
+          kubectl get pods -A
+          echo "✅ Cluster upgrade completed and verified."
