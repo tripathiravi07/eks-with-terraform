@@ -24,5 +24,5 @@ output "eks_cluster_name" {
 }
 
 output "eks_cluster_version" {
-    value = aws_eks_cluster.eks-terraform.platform_version
+    value = aws_eks_cluster.eks-terraform[0].platform_version
 }
