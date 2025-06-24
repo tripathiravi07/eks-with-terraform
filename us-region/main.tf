@@ -51,3 +51,7 @@ output "eks-cluster-ca" {
 output "eks-cluster-name" {
   value = module.eks_cluster.eks_cluster_name
 }
+
+output "eks-cluster-version" {
+  value = module.eks_cluster.eks_cluster_version
+}
