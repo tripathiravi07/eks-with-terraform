@@ -23,7 +23,7 @@ output "all_subnets" {
   value = module.vpc_network.all_subnet_ids
 }
 
-#Creating EKS Cluster 
+#Creating the EKS Cluster 
 module "eks_cluster" {
   source             = "../modules/eks"
   cluster_name       = "eks-with-terraform"
