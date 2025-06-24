@@ -7,5 +7,5 @@ variable "private" {
 }
 
 variable "cluster_version" {
-  default = "1.31"
+  default = "1.32"
 }
