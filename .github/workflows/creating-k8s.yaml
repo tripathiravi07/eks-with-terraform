@@ -42,5 +42,6 @@ jobs:
               aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
 
       - name: Installing K8S Components
+        working-directory: ${{ env.TF_DIR }}
         run: |
               kubectl apply -f .
