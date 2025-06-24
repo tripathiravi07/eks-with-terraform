@@ -29,9 +29,9 @@ module "eks_cluster" {
   cluster_name       = "eks-with-terraform"
   kubernetes_version = var.cluster_version
   subnet_ids         = module.vpc_network.all_subnet_ids
-  coredns-version    = "v1.11.4-eksbuild.2"
-  kube-proxy-version = "v1.32.0-eksbuild.2"
-  vpc-cni-version    = "v1.19.2-eksbuild.5"
+  coredns-version    = "v1.12.1-eksbuild.2"
+  kube-proxy-version = "v1.33.0-eksbuild.2"
+  vpc-cni-version    = "v1.19.6-eksbuild.1"
   node_subnet_ids    = module.vpc_network.private_subnets
   vpc_id             = module.vpc_network.vpc_id
 }
