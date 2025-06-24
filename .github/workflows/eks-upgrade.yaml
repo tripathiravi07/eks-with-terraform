@@ -187,7 +187,7 @@ jobs:
           
                 echo "✅ Add-on $ADDON upgrade initiated."
               done
-              
+
       - name: Post-Upgrade Validation
         if: env.UPGRADE_NEEDED == 'true'
         run: |
@@ -219,3 +219,39 @@ jobs:
         
               echo "✅ Node group $NODEGROUP update initiated."
             done
+      - name: Post-Upgrade - Update main.tf with latest add-on versions
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ./us-region
+        run: |
+              echo "🔍 Fetching latest compatible add-on versions for EKS $LATEST_VERSION"
+          
+              CORE_DNS=$(aws eks describe-addon-versions \
+                --addon-name coredns \
+                --kubernetes-version $LATEST_VERSION \
+                --region $REGION \
+                | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+              VPC_CNI=$(aws eks describe-addon-versions \
+                --addon-name vpc-cni \
+                --kubernetes-version $LATEST_VERSION \
+                --region $REGION \
+                | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+              KUBE_PROXY=$(aws eks describe-addon-versions \
+                --addon-name kube-proxy \
+                --kubernetes-version $LATEST_VERSION \
+                --region $REGION \
+                | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+              echo "✅ Latest Add-on Versions:"
+              echo "coredns-version    = $CORE_DNS"
+              echo "vpc-cni-version    = $VPC_CNI"
+              echo "kube-proxy-version = $KUBE_PROXY"
+          
+              echo "🔧 Updating main.tf with latest add-on versions..."
+          
+              sed -i "s/\(coredns-version\s*=\s*\"\)[^\"]*\(\"\)/\1${CORE_DNS}\2/" main.tf
+              sed -i "s/\(vpc-cni-version\s*=\s*\"\)[^\"]*\(\"\)/\1${VPC_CNI}\2/" main.tf
+              sed -i "s/\(kube-proxy-version\s*=\s*\"\)[^\"]*\(\"\)/\1${KUBE_PROXY}\2/" main.tf
+          
+              echo "✅ main.tf updated with latest add-on versions"
