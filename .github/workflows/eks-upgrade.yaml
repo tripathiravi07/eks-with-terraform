@@ -25,12 +25,7 @@ jobs:
       - name: Install Dependencies (Terraform 1.5.7, kubectl, jq)
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip jq curl
-
-          echo "Installing Terraform 1.5.7..."
-          curl -LO https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
-          unzip terraform_1.5.7_linux_amd64.zip
-          sudo mv terraform /usr/local/bin/
+          sudo apt-get install -y unzip jq curl terraform
 
           echo "Installing kubectl..."
           curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
