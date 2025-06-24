@@ -44,4 +44,5 @@ jobs:
       - name: Installing K8S Components
         working-directory: ${{ env.TF_DIR }}
         run: |
+              ls -ltrh
               kubectl apply -f .
