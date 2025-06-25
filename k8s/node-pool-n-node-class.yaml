@@ -48,6 +48,11 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 120s
+    budgets:
+    - nodes: 10%
+    - schedule: "0 9 * * mon-fri"
+      duration: 8h
+      nodes: "0"
 ---
 apiVersion: karpenter.sh/v1
 kind: NodePool
@@ -83,6 +88,11 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 120s
+    budgets:
+    - nodes: 10%
+    - schedule: "0 9 * * mon-fri"
+      duration: 8h
+      nodes: "0"
 ---
 apiVersion: karpenter.sh/v1
 kind: NodePool
@@ -121,3 +131,8 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 120s
+    budgets:
+    - nodes: 10%
+    - schedule: "0 9 * * mon-fri"
+      duration: 8h
+      nodes: "0"
