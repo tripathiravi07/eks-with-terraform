@@ -49,6 +49,13 @@ jobs:
      - name: Terraform validate
        id: validate
        run: terraform validate
+
+     - name: Get EKS Cluster Name from Terraform Output
+       id: get-cluster
+       run: |
+         CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
+         echo "EKS Cluster Name: $CLUSTER_NAME"
+         echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
  
      - name: Get Current Add-on Versions
        run: |
