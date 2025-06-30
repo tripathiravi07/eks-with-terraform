@@ -29,7 +29,10 @@ jobs:
        uses: hashicorp/setup-terraform@v2
        with:
          terraform_version: 1.5.7
-    
+     - name: Install Dependencies
+       run: |
+          sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+          sudo apt-get install -y unzip jq curl 
      - name: Terraform Init with Dynamic Backend Config
        id: init
        run: |
@@ -51,7 +54,6 @@ jobs:
        run: terraform validate
 
      - name: Get EKS Cluster Name from Terraform Output
-       id: get-cluster
        run: |
          CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
          echo "EKS Cluster Name: $CLUSTER_NAME"
