@@ -13,7 +13,7 @@ jobs:
       contents: write
     env:
       REGION: us-east-1
-      TF_DIR: ./us-region
+      TF_DIR: ./regions/us-east-1
 
     steps:
       - name: Checkout code
@@ -140,31 +140,31 @@ jobs:
       - name: Terraform Plan - Upgrade EKS Version
         if: env.UPGRADE_NEEDED == 'true'
         working-directory: ${{ env.TF_DIR }}
-        run: terraform plan -var-file=upgrade.auto.tfvars
+        run: terraform plan -var="eks_version=${LATEST_VERSION}"
 
       - name: Terraform Apply - Upgrade EKS Version
         if: env.UPGRADE_NEEDED == 'true'
         working-directory: ${{ env.TF_DIR }}
-        run: terraform apply -auto-approve -var-file=upgrade.auto.tfvars
+        run: terraform apply -auto-approve -var="eks_version=${LATEST_VERSION}"
       
-      - name: Post-Upgrade - Update variables.tf with new version
-        if: env.UPGRADE_NEEDED == 'true'
-        working-directory: ./us-region
-        run: |
-          echo "🔧 Updating 'cluster_version' in variables.tf to $LATEST_VERSION"
-          sed -i "s/^\(\s*default\s*=\s*\"\)[^\"]*\(\"\)/\1${LATEST_VERSION}\2/" variables.tf
-          echo "✅ variables.tf updated"
+      # - name: Post-Upgrade - Update variables.tf with new version
+      #   if: env.UPGRADE_NEEDED == 'true'
+      #   working-directory: ./us-region
+      #   run: |
+      #     echo "🔧 Updating 'cluster_version' in variables.tf to $LATEST_VERSION"
+      #     sed -i "s/^\(\s*default\s*=\s*\"\)[^\"]*\(\"\)/\1${LATEST_VERSION}\2/" variables.tf
+      #     echo "✅ variables.tf updated"
       
-      - name: Commit updated variables.tf
-        if: env.UPGRADE_NEEDED == 'true'
-        working-directory: ./us-region
-        run: |
-            git config --global user.email "actions@github.com"
-            git config --global user.name "GitHub Actions"
-            git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
-            git add variables.tf
-            git commit -m "chore: update cluster_version to ${LATEST_VERSION} after EKS upgrade"
-            git push origin main
+      # - name: Commit updated variables.tf
+      #   if: env.UPGRADE_NEEDED == 'true'
+      #   working-directory: ./us-region
+      #   run: |
+      #       git config --global user.email "actions@github.com"
+      #       git config --global user.name "GitHub Actions"
+      #       git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+      #       git add variables.tf
+      #       git commit -m "chore: update cluster_version to ${LATEST_VERSION} after EKS upgrade"
+      #       git push origin main
       - name: Upgrade EKS Add-ons
         if: env.UPGRADE_NEEDED == 'true'
         run: |

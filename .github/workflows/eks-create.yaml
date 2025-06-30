@@ -14,6 +14,9 @@ env:
  # verbosity setting for Terraform logs
  TF_LOG: INFO
  EKS_VERSION: "1.32"
+ CORE_DNS: "v1.11.4-eksbuild.14"
+ KUBE_PROXY: "v1.32.5-eksbuild.2"
+ VPC_CNI: "v1.19.6-eksbuild.1"
  # Terraform Backed Configuration
  TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
  TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
@@ -64,7 +67,7 @@ jobs:
      - name: Terraform plan
        id: plan
        if: github.event_name == 'pull_request'
-       run: terraform plan -no-color -input=false -var="eks_version=${EKS_VERSION}"
+       run: terraform plan -no-color -input=false -var="eks_version=${EKS_VERSION}" -var="coredns_v=${CORE_DNS}" -var="vpc_cni_v=${VPC_CNI}" -var="kube_proxy_v=${KUBE_PROXY}"
        continue-on-error: true
     
      - uses: actions/github-script@v6

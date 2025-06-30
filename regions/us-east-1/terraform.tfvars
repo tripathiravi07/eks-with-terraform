@@ -11,3 +11,9 @@ private = {
 }
 
 eks_version = ""
+
+coredns_v = ""
+
+vpc_cni_v = ""
+
+kube_proxy_v = ""
