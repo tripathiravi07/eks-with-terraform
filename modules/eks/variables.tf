@@ -19,15 +19,15 @@ variable "cluster_iam_role_name" {
   default     = "eks-cluster-role"
 }
 
-variable "coredns-version" {
+variable "coredns_v" {
   type = string
 }
 
-variable "kube-proxy-version" {
+variable "kube_proxy_v" {
   type = string
 }
 
-variable "vpc-cni-version" {
+variable "vpc_cni_v" {
   type = string
 }
 
