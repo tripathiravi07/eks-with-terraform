@@ -1,0 +1,280 @@
+name: EKS Upgrade Checker and Upgrader
+
+on:
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  eks-upgrade:
+    name: Check and Upgrade EKS Version via Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      REGION: us-east-1
+      TF_DIR: ./us-region
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Install Dependencies (Terraform 1.5.7, kubectl, jq)
+        run: |
+          sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+          sudo apt-get install -y unzip jq curl 
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          wget -O- https://apt.releases.hashicorp.com/gpg | \
+          gpg --dearmor | \
+          sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+          gpg --no-default-keyring \
+          --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+          --fingerprint
+
+          sudo apt update
+          sudo apt-get install terraform
+          echo "Verifying Installation"
+          terraform -help
+
+          echo "Installing kubectl..."
+          curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.32.3/2025-04-17/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+
+      - name: Initialize Terraform with Backend
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+          TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+          TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+        run: |
+          terraform init -reconfigure \
+            -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+            -backend-config="key=${TF_BACKEND_KEY}" \
+            -backend-config="region=${TF_BACKEND_REGION}"
+
+      - name: Get EKS Cluster Name from Terraform Output
+        id: get-cluster
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
+          echo "EKS Cluster Name: $CLUSTER_NAME"
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+
+      - name: Get Current EKS Version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.version')
+          echo "Current EKS Version: $CURRENT_VERSION"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Get Latest Available EKS Version
+        id: latest-version
+        run: |
+          LATEST_VERSION=$(aws eks describe-cluster-versions --region $REGION | jq -r '.clusterVersions[0].clusterVersion')
+          echo "Latest Available EKS Version: $LATEST_VERSION"
+          echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+
+      - name: Check if Upgrade is Needed
+        id: upgrade-check
+        run: |
+          if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+            echo "EKS cluster is already up to date."
+            echo "UPGRADE_NEEDED=false" >> $GITHUB_ENV
+          else
+            echo "Upgrade available from $CURRENT_VERSION to $LATEST_VERSION."
+            echo "UPGRADE_NEEDED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Exit if No Upgrade Needed
+        if: env.UPGRADE_NEEDED == 'false'
+        run: |
+          echo "Exiting workflow - EKS is already on latest version."
+          exit 0
+
+      - name: Update Kubeconfig
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+
+      - name: Pre-Upgrade Check - Cluster, Nodes, Pods Health
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+            echo "Checking if EKS cluster is ACTIVE..."
+            CLUSTER_STATUS=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.status')
+            if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+              echo "❌ Cluster is not in ACTIVE state: $CLUSTER_STATUS"
+              exit 1
+            fi
+        
+            echo "Checking for nodes not in Ready state..."
+            NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
+            if [ -n "$NOT_READY_NODES" ]; then
+              echo "❌ Found nodes not in Ready state:"
+              echo "$NOT_READY_NODES"
+              exit 1
+            fi
+        
+            echo "Checking for pods not in Running state..."
+            NOT_RUNNING_PODS=$(kubectl get pods -A --no-headers | awk '$4 != "Running"')
+            if [ -n "$NOT_RUNNING_PODS" ]; then
+              echo "❌ Found pods not in Running state:"
+              echo "$NOT_RUNNING_PODS"
+              exit 1
+            fi
+        
+            echo "✅ Pre-upgrade checks passed."
+
+      - name: Write upgrade.auto.tfvars with latest version
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          echo "cluster_version = \"${LATEST_VERSION}\"" > $TF_DIR/upgrade.auto.tfvars
+
+      - name: Terraform Plan - Upgrade EKS Version
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform plan -var-file=upgrade.auto.tfvars
+
+      - name: Terraform Apply - Upgrade EKS Version
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -auto-approve -var-file=upgrade.auto.tfvars
+      
+      - name: Post-Upgrade - Update variables.tf with new version
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ./us-region
+        run: |
+          echo "🔧 Updating 'cluster_version' in variables.tf to $LATEST_VERSION"
+          sed -i "s/^\(\s*default\s*=\s*\"\)[^\"]*\(\"\)/\1${LATEST_VERSION}\2/" variables.tf
+          echo "✅ variables.tf updated"
+      
+      - name: Commit updated variables.tf
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ./us-region
+        run: |
+            git config --global user.email "actions@github.com"
+            git config --global user.name "GitHub Actions"
+            git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+            git add variables.tf
+            git commit -m "chore: update cluster_version to ${LATEST_VERSION} after EKS upgrade"
+            git push origin main
+      - name: Upgrade EKS Add-ons
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+              echo "🔍 Listing installed add-ons for cluster: $CLUSTER_NAME"
+              ADDONS=$(aws eks list-addons --cluster-name "$CLUSTER_NAME" --region "$REGION" | jq -r '.addons[]')
+          
+              if [ -z "$ADDONS" ]; then
+                echo "⚠️ No add-ons found in the cluster."
+                exit 0
+              fi
+          
+              for ADDON in $ADDONS; do
+                echo "🔄 Checking latest version for add-on: $ADDON"
+          
+                ADDON_VERSION=$(aws eks describe-addon-versions \
+                  --addon-name "$ADDON" \
+                  --kubernetes-version "$LATEST_VERSION" \
+                  --region "$REGION" \
+                  | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+                if [ -z "$ADDON_VERSION" ] || [ "$ADDON_VERSION" == "null" ]; then
+                  echo "❌ Could not find a compatible version for $ADDON with Kubernetes $LATEST_VERSION"
+                  continue
+                fi
+          
+                echo "⬆️ Upgrading $ADDON to version $ADDON_VERSION..."
+                aws eks update-addon \
+                  --cluster-name "$CLUSTER_NAME" \
+                  --addon-name "$ADDON" \
+                  --addon-version "$ADDON_VERSION" \
+                  --resolve-conflicts OVERWRITE \
+                  --region "$REGION"
+          
+                echo "✅ Add-on $ADDON upgrade to version $ADDON_VERSION initiated."
+              done
+
+      - name: Post-Upgrade Validation
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          echo "Waiting for cluster upgrade to stabilize..."
+          sleep 120
+          kubectl get nodes
+          kubectl get pods -A
+          echo "✅ Cluster upgrade completed and verified."
+      
+      - name: Upgrade EKS Node Groups (Rolling)
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+            echo "🔍 Listing node groups in cluster: $CLUSTER_NAME"
+            
+            NODEGROUPS=$(aws eks list-nodegroups --cluster-name $CLUSTER_NAME --region $REGION | jq -r '.nodegroups[]')
+        
+            if [ -z "$NODEGROUPS" ]; then
+              echo "⚠️ No node groups found in the cluster."
+              exit 1
+            fi
+        
+            for NODEGROUP in $NODEGROUPS; do
+              echo "⬆️ Updating node group: $NODEGROUP"
+              aws eks update-nodegroup-version \
+                --cluster-name "$CLUSTER_NAME" \
+                --nodegroup-name "$NODEGROUP" \
+                --region "$REGION" \
+                --no-force
+        
+              echo "✅ Node group $NODEGROUP update initiated."
+            done
+      - name: Post-Upgrade - Update main.tf with latest add-on versions
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ./us-region
+        run: |
+              echo "🔍 Fetching latest compatible add-on versions for EKS $LATEST_VERSION"
+          
+              CORE_DNS=$(aws eks describe-addon-versions \
+                --addon-name coredns \
+                --kubernetes-version $LATEST_VERSION \
+                --region $REGION \
+                | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+              VPC_CNI=$(aws eks describe-addon-versions \
+                --addon-name vpc-cni \
+                --kubernetes-version $LATEST_VERSION \
+                --region $REGION \
+                | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+              KUBE_PROXY=$(aws eks describe-addon-versions \
+                --addon-name kube-proxy \
+                --kubernetes-version $LATEST_VERSION \
+                --region $REGION \
+                | jq -r '.addons[0].addonVersions[0].addonVersion')
+          
+              echo "✅ Latest Add-on Versions:"
+              echo "coredns-version    = $CORE_DNS"
+              echo "vpc-cni-version    = $VPC_CNI"
+              echo "kube-proxy-version = $KUBE_PROXY"
+          
+              echo "🔧 Updating main.tf with latest add-on versions..."
+          
+              sed -i "s/\(coredns-version\s*=\s*\"\)[^\"]*\(\"\)/\1${CORE_DNS}\2/" main.tf
+              sed -i "s/\(vpc-cni-version\s*=\s*\"\)[^\"]*\(\"\)/\1${VPC_CNI}\2/" main.tf
+              sed -i "s/\(kube-proxy-version\s*=\s*\"\)[^\"]*\(\"\)/\1${KUBE_PROXY}\2/" main.tf
+          
+              echo "✅ main.tf updated with latest add-on versions"
+      - name: Commit updated add-on versions
+        if: env.UPGRADE_NEEDED == 'true'
+        working-directory: ./us-region
+        run: |
+                git config --global user.email "actions@github.com"
+                git config --global user.name "GitHub Actions"
+                git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+                git add main.tf
+                git commit -m "chore: update EKS add-on versions after upgrade"
+                git push origin main

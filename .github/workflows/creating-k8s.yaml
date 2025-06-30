@@ -1,0 +1,48 @@
+name: Installing K8S Components
+
+on:
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  eks-upgrade:
+    name: Check and Upgrade EKS Version via Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      REGION: us-east-1
+      CLUSTER_NAME: eks-with-terraform
+      TF_DIR: ./k8s
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Install Dependencies (kubectl, jq)
+        run: |
+            sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+            sudo apt-get install -y unzip jq curl 
+  
+            echo "Installing kubectl..."
+            curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.32.3/2025-04-17/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+
+      - name: Update Kubeconfig
+        run: |
+              aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+
+      - name: Installing K8S Components
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+              ls -ltrh
+              kubectl apply -f .

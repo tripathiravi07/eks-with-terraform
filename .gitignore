@@ -1,0 +1,25 @@
+# Terraform
+regions/us-east-1/.terraform/
+regions/us-east-1/*.tfstate
+regions/us-east-1/*.tfstate.backup
+regions/us-east-1/terraform.tfstate.*.backup
+regions/us-east-1/.terraform.lock.hcl
+regions/us-east-1/terraform.tfstate.1746637296.backup
+
+
+# Crash logs
+crash.log
+
+# Ignore override files
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore sensitive or system-specific files
+.terraformrc
+terraform.rc
+
+.DS_Store

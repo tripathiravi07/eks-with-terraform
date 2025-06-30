@@ -1,0 +1,96 @@
+name: EKS Cluster Provisioning In AWS
+on:
+    push:
+      branches:
+      - main
+      paths:
+      - regions/us-east-1**
+    pull_request:
+      branches:
+      - main
+      paths:
+      - regions/us-east-1**
+env:
+ # verbosity setting for Terraform logs
+ TF_LOG: INFO
+ EKS_VERSION: "1.32"
+ # Terraform Backed Configuration
+ TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+ TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+ TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+ # Credentials for deployment to AWS
+ AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+ AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+ terraform:
+   name: "Terraform Infrastructure Change Management"
+   runs-on: ubuntu-latest
+   defaults:
+     run:
+       shell: bash
+       # We keep Terraform files in the terraform directory.
+       working-directory: ./us-region
+   steps:
+     - name: Checkout the repository to the runner
+       uses: actions/checkout@v2
+ 
+     - name: Setup Terraform with specified version on the runner
+       uses: hashicorp/setup-terraform@v2
+       with:
+         terraform_version: 1.5.7
+    
+     - name: Terraform init
+       id: init
+       run: -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+            -backend-config="key=${TF_BACKEND_KEY}" \
+            -backend-config="region=${TF_BACKEND_REGION}"
+ 
+     - name: Terraform format
+       id: fmt
+       run: terraform fmt -check
+    
+     - name: Terraform validate
+       id: validate
+       run: terraform validate
+ 
+     - name: Terraform plan
+       id: plan
+       if: github.event_name == 'pull_request'
+       run: terraform plan -no-color -input=false -var="cluster_version=${EKS_VERSION}"
+       continue-on-error: true
+    
+     - uses: actions/github-script@v6
+       if: github.event_name == 'pull_request'
+       env:
+         PLAN: "us-region\n${{ steps.plan.outputs.stdout }}"
+       with:
+         script: |
+           const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+           #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+           #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+           #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+ 
+           <details><summary>Show Plan</summary>
+ 
+           \`\`\`\n
+           ${process.env.PLAN}
+           \`\`\`
+ 
+           </details>
+           *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+ 
+           github.rest.issues.createComment({
+             issue_number: context.issue.number,
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             body: output
+           })
+ 
+     - name: Terraform Plan Status
+       if: steps.plan.outcome == 'failure'
+       run: exit 1
+ 
+     - name: Terraform Apply
+       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+       run: terraform apply -auto-approve -input=false -var="cluster_version=${EKS_VERSION}"
