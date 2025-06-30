@@ -7,6 +7,10 @@ env:
  # Credentials for deployment to AWS
  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+ # Terraform Backed Configuration
+ TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+ TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+ TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
 
 jobs:
  terraform:
@@ -26,17 +30,18 @@ jobs:
        with:
          terraform_version: 1.5.7
     
-     - name: Terraform init
-       env:
-        TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
-        TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
-        TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+     - name: Terraform Init with Dynamic Backend Config
        id: init
-       run: terraform init -reconfigure \
-            -backend-config="bucket=${TF_BACKEND_BUCKET}" \
-            -backend-config="key=${TF_BACKEND_KEY}" \
-            -backend-config="region=${TF_BACKEND_REGION}"
- 
+       run: |
+             terraform init \
+               -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+               -backend-config="key=${TF_BACKEND_KEY}" \
+               -backend-config="region=${TF_BACKEND_REGION}"
+       env:
+           TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+           TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+           TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+
      - name: Terraform format
        id: fmt
        run: terraform fmt -check
@@ -45,10 +50,42 @@ jobs:
        id: validate
        run: terraform validate
  
-     - name: Terraform plan
-       id: plan
-       run: terraform plan -no-color -input=false
-       continue-on-error: true
- 
-     - name: Terraform Destroy
-       run: terraform destroy -auto-approve
+     - name: Get Current Add-on Versions
+       run: |
+          echo "🔍 Fetching current add-on versions for cluster: $CLUSTER_NAME"
+
+          CORE_DNS_VERSION=$(aws eks describe-addon \
+          --cluster-name "$CLUSTER_NAME" \
+          --addon-name coredns \
+          --region "$REGION" | jq -r '.addon.addonVersion')
+
+          VPC_CNI_VERSION=$(aws eks describe-addon \
+          --cluster-name "$CLUSTER_NAME" \
+          --addon-name vpc-cni \
+          --region "$REGION" | jq -r '.addon.addonVersion')
+
+          KUBE_PROXY_VERSION=$(aws eks describe-addon \
+          --cluster-name "$CLUSTER_NAME" \
+          --addon-name kube-proxy \
+          --region "$REGION" | jq -r '.addon.addonVersion')
+
+          echo "CORE_DNS_VERSION=$CORE_DNS_VERSION" >> $GITHUB_ENV
+          echo "VPC_CNI_VERSION=$VPC_CNI_VERSION" >> $GITHUB_ENV
+          echo "KUBE_PROXY_VERSION=$KUBE_PROXY_VERSION" >> $GITHUB_ENV
+          echo "✅ Exported current add-on versions"
+
+     - name: Terraform Plan - Upgrade EKS Version
+       run: |
+          terraform plan \
+            -var="eks_version=${LATEST_VERSION}" \
+            -var="coredns_v=${CORE_DNS_VERSION}" \
+            -var="vpc_cni_v=${VPC_CNI_VERSION}" \
+            -var="kube_proxy_v=${KUBE_PROXY_VERSION}"
+
+     - name: Terraform Apply - Upgrade EKS Version
+       run: |
+          terraform destroy -auto-approve \
+            -var="eks_version=${LATEST_VERSION}" \
+            -var="coredns_v=${CORE_DNS_VERSION}" \
+            -var="vpc_cni_v=${VPC_CNI_VERSION}" \
+            -var="kube_proxy_v=${KUBE_PROXY_VERSION}"
