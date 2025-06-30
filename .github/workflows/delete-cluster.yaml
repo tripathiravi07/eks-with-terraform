@@ -55,12 +55,21 @@ jobs:
        id: get-cluster
        working-directory: ${{ env.TF_DIR }}
        run: |
-          echo "📦 Dumping Terraform output..."
-          terraform output -json
-          echo "🔍 Extracting eks-cluster-name..."
-          CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
-          echo "EKS Cluster Name: $CLUSTER_NAME"
-          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+         echo "📦 Fetching Terraform output..."
+         OUTPUT_JSON=$(terraform output -json)
+
+         echo "💬 Raw output:"
+         echo "$OUTPUT_JSON"
+
+         CLUSTER_NAME=$(echo "$OUTPUT_JSON" | jq -r '.["eks-cluster-name"].value')
+
+         if [ -z "$CLUSTER_NAME" ] || [ "$CLUSTER_NAME" == "null" ]; then
+           echo "❌ Failed to extract EKS cluster name"
+           exit 1
+         fi
+
+         echo "✅ EKS Cluster Name: $CLUSTER_NAME"
+         echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
  
      - name: Get Current Add-on Versions
        run: |
