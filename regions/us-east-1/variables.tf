@@ -8,7 +8,7 @@ variable "private" {
   type        = map(string)
 }
 
-variable "version" {
+variable "eks_version" {
   description = "Kubernetes cluster version"
   type        = string
 }

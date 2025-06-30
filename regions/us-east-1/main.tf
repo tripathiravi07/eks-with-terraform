@@ -2,8 +2,8 @@
 module "vpc_network" {
   source   = "../../modules/vpc"
   vpc_cidr = "10.0.0.0/16"
-  public   = public
-  private  = private
+  public   = var.public
+  private  = var.private
 }
 
 #OutPut From VPC Module which is consumed by EKS Cluster Resources
@@ -27,7 +27,7 @@ output "all_subnets" {
 module "eks_cluster" {
   source             = "../../modules/eks"
   cluster_name       = "eks-with-terraform"
-  kubernetes_version = version
+  kubernetes_version = var.eks_version
   subnet_ids         = module.vpc_network.all_subnet_ids
   coredns-version    = "v1.12.1-eksbuild.2"
   kube-proxy-version = "v1.33.0-eksbuild.2"
