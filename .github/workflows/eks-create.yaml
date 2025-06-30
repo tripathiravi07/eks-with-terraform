@@ -40,11 +40,18 @@ jobs:
        with:
          terraform_version: 1.5.7
     
-     - name: Terraform init
+     - name: Terraform Init with Dynamic Backend Config
        id: init
-       run: -backend-config="bucket=${TF_BACKEND_BUCKET}" \
-            -backend-config="key=${TF_BACKEND_KEY}" \
-            -backend-config="region=${TF_BACKEND_REGION}"
+
+       run: |
+           terraform init \
+             -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+             -backend-config="key=${TF_BACKEND_KEY}" \
+             -backend-config="region=${TF_BACKEND_REGION}"
+       env:
+           TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+           TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+           TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
  
      - name: Terraform format
        id: fmt
