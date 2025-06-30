@@ -10,6 +10,7 @@ env:
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
  REGION: us-east-1
  LATEST_VERSION: "1.33"
+ CLUSTER_NAME: "eks-with-terraform"
 jobs:
  terraform:
    name: "Terraform Infrastructure Change Management"
