@@ -14,9 +14,9 @@ env:
  # verbosity setting for Terraform logs
  TF_LOG: INFO
  EKS_VERSION: "1.32"
- CORE_DNS: "v1.11.4-eksbuild.14"
- KUBE_PROXY: "v1.32.5-eksbuild.2"
- VPC_CNI: "v1.19.6-eksbuild.1"
+ CORE_DNS: "1.11.4"
+ KUBE_PROXY: "1.32.5"
+ VPC_CNI: "1.19.6"
  # Terraform Backed Configuration
  TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
  TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
