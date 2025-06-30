@@ -11,7 +11,6 @@ regions/us-east-1/terraform.tfstate.1746637296.backup
 crash.log
 
 # Ignore override files
-*.tfvars
 *.tfvars.json
 override.tf
 override.tf.json
