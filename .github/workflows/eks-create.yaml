@@ -30,7 +30,7 @@ jobs:
      run:
        shell: bash
        # We keep Terraform files in the terraform directory.
-       working-directory: ./us-region
+       working-directory: ./regions/us-east-1
    steps:
      - name: Checkout the repository to the runner
        uses: actions/checkout@v2
