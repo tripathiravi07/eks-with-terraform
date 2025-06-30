@@ -132,10 +132,10 @@ jobs:
         
             echo "✅ Pre-upgrade checks passed."
 
-      - name: Write upgrade.auto.tfvars with latest version
-        if: env.UPGRADE_NEEDED == 'true'
-        run: |
-          echo "cluster_version = \"${LATEST_VERSION}\"" > $TF_DIR/upgrade.auto.tfvars
+      # - name: Write upgrade.auto.tfvars with latest version
+      #   if: env.UPGRADE_NEEDED == 'true'
+      #   run: |
+      #     echo "cluster_version = \"${LATEST_VERSION}\"" > $TF_DIR/upgrade.auto.tfvars
 
       - name: Terraform Plan - Upgrade EKS Version
         if: env.UPGRADE_NEEDED == 'true'
