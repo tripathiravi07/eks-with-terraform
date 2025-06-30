@@ -9,7 +9,7 @@ env:
  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
  REGION: us-east-1
-
+ LATEST_VERSION: "1.33"
 jobs:
  terraform:
    name: "Terraform Infrastructure Change Management"
@@ -46,13 +46,13 @@ jobs:
              -backend-config="bucket=${TF_BACKEND_BUCKET}" \
              -backend-config="key=${TF_BACKEND_KEY}" \
              -backend-config="region=${TF_BACKEND_REGION}"
-     - name: Get EKS Cluster Name from Terraform Output
-       id: get-cluster
-       working-directory: ${{ env.TF_DIR }}
-       run: |
-               CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
-               echo "EKS Cluster Name: $CLUSTER_NAME"
-               echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+    #  - name: Get EKS Cluster Name from Terraform Output
+    #    id: get-cluster
+    #    working-directory: ${{ env.TF_DIR }}
+    #    run: |
+    #            CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
+    #            echo "EKS Cluster Name: $CLUSTER_NAME"
+    #            echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
 
      - name: Terraform format
        id: fmt
@@ -94,7 +94,7 @@ jobs:
             -var="vpc_cni_v=${VPC_CNI_VERSION}" \
             -var="kube_proxy_v=${KUBE_PROXY_VERSION}"
 
-     - name: Terraform Apply - Upgrade EKS Version
+     - name: Terraform Destroy - Deletes EKS Version
        run: |
           terraform destroy -auto-approve \
             -var="eks_version=${LATEST_VERSION}" \
