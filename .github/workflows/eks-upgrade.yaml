@@ -167,9 +167,9 @@ jobs:
         run: |
           terraform plan \
             -var="eks_version=${LATEST_VERSION}" \
-            -var="coredns_version=${CORE_DNS_VERSION}" \
-            -var="vpc_cni_version=${VPC_CNI_VERSION}" \
-            -var="kube_proxy_version=${KUBE_PROXY_VERSION}"
+            -var="coredns_v=${CORE_DNS_VERSION}" \
+            -var="vpc_cni_v=${VPC_CNI_VERSION}" \
+            -var="kube_proxy_v=${KUBE_PROXY_VERSION}"
 
       - name: Terraform Apply - Upgrade EKS Version
         if: env.UPGRADE_NEEDED == 'true'
@@ -177,9 +177,9 @@ jobs:
         run: |
           terraform apply -auto-approve \
             -var="eks_version=${LATEST_VERSION}" \
-            -var="coredns_version=${CORE_DNS_VERSION}" \
-            -var="vpc_cni_version=${VPC_CNI_VERSION}" \
-            -var="kube_proxy_version=${KUBE_PROXY_VERSION}"
+            -var="coredns_v=${CORE_DNS_VERSION}" \
+            -var="vpc_cni_v=${VPC_CNI_VERSION}" \
+            -var="kube_proxy_v=${KUBE_PROXY_VERSION}"
       
       # - name: Post-Upgrade - Update variables.tf with new version
       #   if: env.UPGRADE_NEEDED == 'true'
