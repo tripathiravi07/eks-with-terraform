@@ -8,10 +8,6 @@ env:
  # Credentials for deployment to AWS
  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
- # Terraform Backed Configuration
- TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
- TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
- TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
 
 jobs:
  terraform:
@@ -31,17 +27,24 @@ jobs:
        with:
          terraform_version: 1.5.7
 
-     - name: Terraform Init with Dynamic Backend Config
-       id: init
-       run: |
-             terraform init \
-               -backend-config="bucket=${TF_BACKEND_BUCKET}" \
-               -backend-config="key=${TF_BACKEND_KEY}" \
-               -backend-config="region=${TF_BACKEND_REGION}"
+     - name: Initialize Terraform with Backend
+       working-directory: ${{ env.TF_DIR }}
        env:
            TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
            TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
            TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+       run: |
+           terraform init -reconfigure \
+             -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+             -backend-config="key=${TF_BACKEND_KEY}" \
+             -backend-config="region=${TF_BACKEND_REGION}"
+     - name: Get EKS Cluster Name from Terraform Output
+       id: get-cluster
+       working-directory: ${{ env.TF_DIR }}
+       run: |
+               CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
+               echo "EKS Cluster Name: $CLUSTER_NAME"
+               echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
 
      - name: Terraform format
        id: fmt
@@ -50,27 +53,7 @@ jobs:
      - name: Terraform validate
        id: validate
        run: terraform validate
-
-     - name: Get EKS Cluster Name from Terraform Output
-       id: get-cluster
-       working-directory: ${{ env.TF_DIR }}
-       run: |
-         echo "📦 Fetching Terraform output..."
-         OUTPUT_JSON=$(terraform output -json)
-
-         echo "💬 Raw output:"
-         echo "$OUTPUT_JSON"
-
-         CLUSTER_NAME=$(echo "$OUTPUT_JSON" | jq -r '.["eks-cluster-name"].value')
-
-         if [ -z "$CLUSTER_NAME" ] || [ "$CLUSTER_NAME" == "null" ]; then
-           echo "❌ Failed to extract EKS cluster name"
-           exit 1
-         fi
-
-         echo "✅ EKS Cluster Name: $CLUSTER_NAME"
-         echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
- 
+       
      - name: Get Current Add-on Versions
        run: |
           echo "🔍 Fetching current add-on versions for cluster: $CLUSTER_NAME"
