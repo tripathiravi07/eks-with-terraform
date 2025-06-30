@@ -64,7 +64,7 @@ jobs:
      - name: Terraform plan
        id: plan
        if: github.event_name == 'pull_request'
-       run: terraform plan -no-color -input=false -var="cluster_version=${EKS_VERSION}"
+       run: terraform plan -no-color -input=false -var="eks_version=${EKS_VERSION}"
        continue-on-error: true
     
      - uses: actions/github-script@v6
@@ -100,4 +100,4 @@ jobs:
  
      - name: Terraform Apply
        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-       run: terraform apply -auto-approve -input=false -var="cluster_version=${EKS_VERSION}"
+       run: terraform apply -auto-approve -input=false -var="eks_version=${EKS_VERSION}"
