@@ -15,15 +15,15 @@ variable "eks_version" {
 
 variable "coredns_v" {
   description = "CoreDNS Version"
-  type = string
+  type        = string
 }
 
 variable "vpc_cni_v" {
   description = "CNI Version"
-  type = string
+  type        = string
 }
 
 variable "kube_proxy_v" {
   description = "Kube-Proxy Version"
-  type = string
+  type        = string
 }
