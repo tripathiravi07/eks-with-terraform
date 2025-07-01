@@ -1,0 +1,78 @@
+name: EKS Plan and Notify
+
+on:
+  workflow_dispatch:
+#   pull_request:
+#     branches:
+#       - main
+
+jobs:
+  eks-plan:
+    name: Terraform Plan for EKS Upgrade
+    runs-on: ubuntu-latest
+    env:
+      REGION: us-east-1
+      TF_DIR: ./regions/us-east-1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+          TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+          TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+        run: |
+          terraform init -reconfigure \
+            -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+            -backend-config="key=${TF_BACKEND_KEY}" \
+            -backend-config="region=${TF_BACKEND_REGION}"
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ env.TF_DIR }}
+        continue-on-error: true
+        run: |
+          terraform plan -no-color > tfplan.txt
+          echo "PLAN_STATUS=$?" >> $GITHUB_ENV
+
+      - name: Prepare Summary + Plan Output
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          if [ "${{ env.PLAN_STATUS }}" -eq 0 ]; then
+            echo "✅ Terraform plan succeeded" > plan_comment.txt
+          else
+            echo "❌ Terraform plan failed" > plan_comment.txt
+          fi
+          echo '' >> plan_comment.txt
+          echo '```hcl' >> plan_comment.txt
+          cat tfplan.txt >> plan_comment.txt
+          echo '```' >> plan_comment.txt
+
+      - name: Post Sticky PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: ./regions/us-east-1/plan_comment.txt
+
+      - name: Add PR Labels
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            type: infra-change
+            needs-approval
