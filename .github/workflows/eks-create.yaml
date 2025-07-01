@@ -5,11 +5,11 @@ on:
       - main
       paths:
       - regions/us-east-1**
-    pull_request:
-      branches:
-      - main
-      paths:
-      - regions/us-east-1**
+    # pull_request:
+    #   branches:
+    #   - main
+    #   paths:
+    #   - regions/us-east-1**
 env:
  # verbosity setting for Terraform logs
  TF_LOG: INFO
