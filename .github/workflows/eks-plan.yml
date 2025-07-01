@@ -48,8 +48,15 @@ jobs:
       - name: Get Cluster Name from Terraform Output
         id: get-cluster
         working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+          TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+          TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
         run: |
-          terraform init -backend=false
+          terraform init -reconfigure \
+            -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+            -backend-config="key=${TF_BACKEND_KEY}" \
+            -backend-config="region=${TF_BACKEND_REGION}"
           CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
           echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
 
@@ -76,24 +83,48 @@ jobs:
           echo "No upgrade required. Exiting..."
           exit 0
 
-      - name: Setup Terraform
-        if: env.UPGRADE_NEEDED == 'true'
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.7
+    #   - name: Setup Terraform
+    #     if: env.UPGRADE_NEEDED == 'true'
+    #     uses: hashicorp/setup-terraform@v3
+    #     with:
+    #       terraform_version: 1.5.7
 
-      - name: Terraform Init
+    #   - name: Terraform Init
+    #     if: env.UPGRADE_NEEDED == 'true'
+    #     working-directory: ${{ env.TF_DIR }}
+    #     env:
+    #       TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+    #       TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+    #       TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+    #     run: |
+    #       terraform init -reconfigure \
+    #         -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+    #         -backend-config="key=${TF_BACKEND_KEY}" \
+    #         -backend-config="region=${TF_BACKEND_REGION}"
+      - name: Get Current Add-on Versions
         if: env.UPGRADE_NEEDED == 'true'
-        working-directory: ${{ env.TF_DIR }}
-        env:
-          TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
-          TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
-          TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
         run: |
-          terraform init -reconfigure \
-            -backend-config="bucket=${TF_BACKEND_BUCKET}" \
-            -backend-config="key=${TF_BACKEND_KEY}" \
-            -backend-config="region=${TF_BACKEND_REGION}"
+            echo "🔍 Fetching current add-on versions for cluster: $CLUSTER_NAME"
+
+            CORE_DNS_VERSION=$(aws eks describe-addon \
+                --cluster-name "$CLUSTER_NAME" \
+                --addon-name coredns \
+                --region "$REGION" | jq -r '.addon.addonVersion')
+
+            VPC_CNI_VERSION=$(aws eks describe-addon \
+                --cluster-name "$CLUSTER_NAME" \
+                --addon-name vpc-cni \
+                --region "$REGION" | jq -r '.addon.addonVersion')
+
+            KUBE_PROXY_VERSION=$(aws eks describe-addon \
+                --cluster-name "$CLUSTER_NAME" \
+                --addon-name kube-proxy \
+                --region "$REGION" | jq -r '.addon.addonVersion')
+
+            echo "CORE_DNS_VERSION=$CORE_DNS_VERSION" >> $GITHUB_ENV
+            echo "VPC_CNI_VERSION=$VPC_CNI_VERSION" >> $GITHUB_ENV
+            echo "KUBE_PROXY_VERSION=$KUBE_PROXY_VERSION" >> $GITHUB_ENV
+            echo "✅ Exported current add-on versions"
 
       - name: Terraform Plan
         if: env.UPGRADE_NEEDED == 'true'
@@ -101,7 +132,11 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         continue-on-error: true
         run: |
-          terraform plan -no-color > tfplan.txt
+          terraform plan \
+            -var="eks_version=${LATEST_VERSION}" \
+            -var="coredns_v=${CORE_DNS_VERSION}" \
+            -var="vpc_cni_v=${VPC_CNI_VERSION}" \
+            -var="kube_proxy_v=${KUBE_PROXY_VERSION}" -no-color  > tfplan.txt
           echo "PLAN_STATUS=$?" >> $GITHUB_ENV
 
       - name: Prepare Summary + Plan Output
