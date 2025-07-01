@@ -1,6 +1,6 @@
 # 🚀 EKS with Terraform
 
-A production-ready infrastructure setup for deploying an **Amazon EKS (Elastic Kubernetes Service)** cluster using **Terraform**. This repository follows Infrastructure-as-Code (IaC) best practices to provision, configure, and manage your Kubernetes environment on AWS.
+A production-ready infrastructure setup for deploying and upgrading an **Amazon EKS (Elastic Kubernetes Service)** cluster using **Terraform** and **GithubActions**. This repository follows Infrastructure-as-Code (IaC) best practices to provision, configure, and manage your Kubernetes environment on AWS.
 
 ---
 
@@ -12,10 +12,8 @@ eks-with-terraform/
 │   ├── vpc/                # VPC and networking resources
 │   ├── eks/                # EKS cluster and node groups
 │   └── ...                 # Add other modules (e.g. EBS, IAM, etc.)
-├── environments/
-│   ├── dev/                # Dev environment configurations
-│   ├── staging/            # Staging environment
-│   └── prod/               # Production environment
+├── regions/
+│   ├── us-east-1/          # Different AWS Regions
 ├── main.tf                 # Root Terraform config
 ├── variables.tf            # Input variables
 ├── outputs.tf              # Output values
@@ -28,10 +26,11 @@ eks-with-terraform/
 ## 🚀 Features
 
 - 🌐 Custom VPC with public/private subnets
-- ⚙️ Fully managed EKS cluster with node groups
+- ⚙️ Fully managed EKS cluster with node groups and Karpenter
 - 🔐 Secure IAM roles for nodes and Kubernetes control plane
 - 📆 Modular and reusable Terraform code
-- 🌍 Multi-environment ready (dev, staging, prod)
+- 🌍 Multi-region ready eks cluster
+- ✅ Fully Automated EKS Upgrade
 
 ---
 
