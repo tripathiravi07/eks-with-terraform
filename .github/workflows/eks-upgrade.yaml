@@ -1,7 +1,9 @@
 name: EKS Upgrade Checker and Upgrader
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions: write-all
 
@@ -171,6 +173,17 @@ jobs:
             -var="vpc_cni_v=${VPC_CNI_VERSION}" \
             -var="kube_proxy_v=${KUBE_PROXY_VERSION}"
 
+      - name: ⏸️ Wait for Manual Approval
+        if: env.UPGRADE_NEEDED == 'true'
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GH_TOKEN }}
+          approvers: tripathiravi07  # <-- Replace with your GitHub username
+          minimum-approvals: 1
+          issue-title: "Approve EKS upgrade to version ${{ env.LATEST_VERSION }}"
+          issue-body: "Please approve or deny the EKS Version upgrade from ${{env.CURRENT_VERSION}} version to ${{ env.LATEST_VERSION }}version"
+          exclude-workflow-initiator-as-approver: false
+
       - name: Terraform Apply - Upgrade EKS Version
         if: env.UPGRADE_NEEDED == 'true'
         working-directory: ${{ env.TF_DIR }}
@@ -234,38 +247,84 @@ jobs:
           
                 echo "✅ Add-on $ADDON upgrade to version $ADDON_VERSION initiated."
               done
-
-      - name: Post-Upgrade Validation
-        if: env.UPGRADE_NEEDED == 'true'
-        run: |
-          echo "Waiting for cluster upgrade to stabilize..."
-          sleep 120
-          kubectl get nodes
-          kubectl get pods -A
-          echo "✅ Cluster upgrade completed and verified."
       
       - name: Upgrade EKS Node Groups (Rolling)
         if: env.UPGRADE_NEEDED == 'true'
         run: |
-            echo "🔍 Listing node groups in cluster: $CLUSTER_NAME"
+                echo "🔍 Listing node groups in cluster: $CLUSTER_NAME"
+                
+                NODEGROUPS=$(aws eks list-nodegroups --cluster-name "$CLUSTER_NAME" --region "$REGION" | jq -r '.nodegroups[]')
             
-            NODEGROUPS=$(aws eks list-nodegroups --cluster-name $CLUSTER_NAME --region $REGION | jq -r '.nodegroups[]')
-        
-            if [ -z "$NODEGROUPS" ]; then
-              echo "⚠️ No node groups found in the cluster."
+                if [ -z "$NODEGROUPS" ]; then
+                  echo "⚠️ No node groups found in the cluster."
+                  exit 1
+                fi
+            
+                for NODEGROUP in $NODEGROUPS; do
+                  echo "⬆️ Updating node group: $NODEGROUP"
+                  aws eks update-nodegroup-version \
+                    --cluster-name "$CLUSTER_NAME" \
+                    --nodegroup-name "$NODEGROUP" \
+                    --region "$REGION" \
+                    --no-force
+            
+                  echo "⏳ Waiting for node group $NODEGROUP to become ACTIVE (max 30 mins)..."
+            
+                  for i in {1..60}; do
+                    STATUS=$(aws eks describe-nodegroup \
+                      --cluster-name "$CLUSTER_NAME" \
+                      --nodegroup-name "$NODEGROUP" \
+                      --region "$REGION" \
+                      | jq -r '.nodegroup.status')
+            
+                    echo "Attempt $i/60 - Status: $STATUS"
+            
+                    if [ "$STATUS" = "ACTIVE" ]; then
+                      echo "✅ Node group $NODEGROUP is ACTIVE"
+                      break
+                    fi
+            
+                    if [ "$STATUS" = "FAILED" ]; then
+                      echo "❌ Upgrade failed for node group $NODEGROUP"
+                      exit 1
+                    fi
+            
+                    if [ $i -eq 60 ]; then
+                      echo "⏱️ Timeout: Node group $NODEGROUP did not become ACTIVE within 30 minutes."
+                      exit 1
+                    fi
+            
+                    sleep 30
+                  done
+                done
+
+      - name: Post-Upgrade Validation
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+            echo "Checking if EKS cluster is ACTIVE..."
+            CLUSTER_STATUS=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.status')
+            if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+              echo "❌ Cluster is not in ACTIVE state: $CLUSTER_STATUS"
               exit 1
             fi
         
-            for NODEGROUP in $NODEGROUPS; do
-              echo "⬆️ Updating node group: $NODEGROUP"
-              aws eks update-nodegroup-version \
-                --cluster-name "$CLUSTER_NAME" \
-                --nodegroup-name "$NODEGROUP" \
-                --region "$REGION" \
-                --no-force
+            echo "Checking for nodes not in Ready state..."
+            NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
+            if [ -n "$NOT_READY_NODES" ]; then
+              echo "❌ Found nodes not in Ready state:"
+              echo "$NOT_READY_NODES"
+              exit 1
+            fi
         
-              echo "✅ Node group $NODEGROUP update initiated."
-            done
+            echo "Checking for pods not in Running state..."
+            NOT_RUNNING_PODS=$(kubectl get pods -A --no-headers | awk '$4 != "Running"')
+            if [ -n "$NOT_RUNNING_PODS" ]; then
+              echo "❌ Found pods not in Running state:"
+              echo "$NOT_RUNNING_PODS"
+              exit 1
+            fi
+        
+            echo "✅ Post-upgrade checks passed."
       # - name: Post-Upgrade - Update main.tf with latest add-on versions
       #   if: env.UPGRADE_NEEDED == 'true'
       #   working-directory: ./us-region
