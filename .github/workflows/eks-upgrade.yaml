@@ -135,10 +135,6 @@ jobs:
         
             echo "✅ Pre-upgrade checks passed."
 
-      # - name: Write upgrade.auto.tfvars with latest version
-      #   if: env.UPGRADE_NEEDED == 'true'
-      #   run: |
-      #     echo "cluster_version = \"${LATEST_VERSION}\"" > $TF_DIR/upgrade.auto.tfvars
       - name: Get Current Add-on Versions
         if: env.UPGRADE_NEEDED == 'true'
         run: |
@@ -195,24 +191,6 @@ jobs:
             -var="vpc_cni_v=${VPC_CNI_VERSION}" \
             -var="kube_proxy_v=${KUBE_PROXY_VERSION}"
       
-      # - name: Post-Upgrade - Update variables.tf with new version
-      #   if: env.UPGRADE_NEEDED == 'true'
-      #   working-directory: ./us-region
-      #   run: |
-      #     echo "🔧 Updating 'cluster_version' in variables.tf to $LATEST_VERSION"
-      #     sed -i "s/^\(\s*default\s*=\s*\"\)[^\"]*\(\"\)/\1${LATEST_VERSION}\2/" variables.tf
-      #     echo "✅ variables.tf updated"
-      
-      # - name: Commit updated variables.tf
-      #   if: env.UPGRADE_NEEDED == 'true'
-      #   working-directory: ./us-region
-      #   run: |
-      #       git config --global user.email "actions@github.com"
-      #       git config --global user.name "GitHub Actions"
-      #       git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
-      #       git add variables.tf
-      #       git commit -m "chore: update cluster_version to ${LATEST_VERSION} after EKS upgrade"
-      #       git push origin main
       - name: Upgrade EKS Add-ons
         if: env.UPGRADE_NEEDED == 'true'
         run: |
@@ -326,49 +304,75 @@ jobs:
             fi
         
             echo "✅ Post-upgrade checks passed."
-      # - name: Post-Upgrade - Update main.tf with latest add-on versions
-      #   if: env.UPGRADE_NEEDED == 'true'
-      #   working-directory: ./us-region
-      #   run: |
-      #         echo "🔍 Fetching latest compatible add-on versions for EKS $LATEST_VERSION"
-          
-      #         CORE_DNS=$(aws eks describe-addon-versions \
-      #           --addon-name coredns \
-      #           --kubernetes-version $LATEST_VERSION \
-      #           --region $REGION \
-      #           | jq -r '.addons[0].addonVersions[0].addonVersion')
-          
-      #         VPC_CNI=$(aws eks describe-addon-versions \
-      #           --addon-name vpc-cni \
-      #           --kubernetes-version $LATEST_VERSION \
-      #           --region $REGION \
-      #           | jq -r '.addons[0].addonVersions[0].addonVersion')
-          
-      #         KUBE_PROXY=$(aws eks describe-addon-versions \
-      #           --addon-name kube-proxy \
-      #           --kubernetes-version $LATEST_VERSION \
-      #           --region $REGION \
-      #           | jq -r '.addons[0].addonVersions[0].addonVersion')
-          
-      #         echo "✅ Latest Add-on Versions:"
-      #         echo "coredns-version    = $CORE_DNS"
-      #         echo "vpc-cni-version    = $VPC_CNI"
-      #         echo "kube-proxy-version = $KUBE_PROXY"
-          
-      #         echo "🔧 Updating main.tf with latest add-on versions..."
-          
-      #         sed -i "s/\(coredns-version\s*=\s*\"\)[^\"]*\(\"\)/\1${CORE_DNS}\2/" main.tf
-      #         sed -i "s/\(vpc-cni-version\s*=\s*\"\)[^\"]*\(\"\)/\1${VPC_CNI}\2/" main.tf
-      #         sed -i "s/\(kube-proxy-version\s*=\s*\"\)[^\"]*\(\"\)/\1${KUBE_PROXY}\2/" main.tf
-          
-      #         echo "✅ main.tf updated with latest add-on versions"
-      # - name: Commit updated add-on versions
-      #   if: env.UPGRADE_NEEDED == 'true'
-      #   working-directory: ./us-region
-      #   run: |
-      #           git config --global user.email "actions@github.com"
-      #           git config --global user.name "GitHub Actions"
-      #           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
-      #           git add main.tf
-      #           git commit -m "chore: update EKS add-on versions after upgrade"
-      #           git push origin main
+  generate-report:
+    name: Generate Upgrade Report
+    runs-on: ubuntu-latest
+    needs: [eks-upgrade]  # Waits for upgrade to finish
+    if: env.UPGRADE_NEEDED == 'true'
+    env:
+      REGION: us-east-1
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Collect Post-Upgrade Cluster Info
+        run: |
+          echo "📊 Collecting post-upgrade metrics..."
+
+          # EKS Cluster Version
+          aws eks describe-cluster \
+            --name "$CLUSTER_NAME" \
+            --region "$REGION" \
+            | jq '.cluster.version' > post_cluster_version.txt
+
+          # Add-on Versions
+          for ADDON in coredns vpc-cni kube-proxy; do
+            aws eks describe-addon \
+              --cluster-name "$CLUSTER_NAME" \
+              --addon-name "$ADDON" \
+              --region "$REGION" \
+              | jq '.addon.addonVersion' > post_${ADDON}_version.txt
+          done
+
+          # Node Info
+          kubectl get nodes -o wide > nodes_after.txt
+          kubectl top nodes > node_metrics.txt || echo "Skipping metrics: kubectl top nodes requires metrics-server"
+
+          # Pod Info
+          kubectl get pods -A > pods_after.txt
+
+      - name: Compare with Pre-upgrade Info
+        run: |
+          echo "# 🧾 EKS Upgrade Report" > eks-upgrade-report.md
+
+          echo "## ✅ EKS Version" >> eks-upgrade-report.md
+          echo "**Before**: $CURRENT_VERSION" >> eks-upgrade-report.md
+          echo "**After**: $(cat post_cluster_version.txt)" >> eks-upgrade-report.md
+
+          echo "## 🔧 Add-on Versions" >> eks-upgrade-report.md
+          for ADDON in coredns vpc-cni kube-proxy; do
+            echo "**$ADDON** - Before: ${ADDON^^}_VERSION=${!ADDON^^_VERSION}" >> eks-upgrade-report.md
+            echo "**$ADDON** - After : $(cat post_${ADDON}_version.txt)" >> eks-upgrade-report.md
+          done
+
+          echo "## 🧠 Node Info (Post Upgrade)" >> eks-upgrade-report.md
+          cat nodes_after.txt >> eks-upgrade-report.md
+
+          echo "## 📦 Pod Inventory" >> eks-upgrade-report.md
+          cat pods_after.txt >> eks-upgrade-report.md
+
+          echo "## 📊 Node Resource Usage" >> eks-upgrade-report.md
+          cat node_metrics.txt >> eks-upgrade-report.md
+
+      - name: Upload Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eks-upgrade-report
+          path: eks-upgrade-report.md
