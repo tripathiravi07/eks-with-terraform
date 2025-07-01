@@ -28,11 +28,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.REGION }}
 
-      - name: Install AWS CLI & jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl unzip jq awscli
-
       - name: Get Cluster Name from Terraform Output
         id: get-cluster
         working-directory: ${{ env.TF_DIR }}
