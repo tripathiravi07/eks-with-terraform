@@ -268,7 +268,7 @@ jobs:
                     --region "$REGION" \
                     --no-force
             
-                  echo "⏳ Waiting for node group $NODEGROUP to become ACTIVE (max 30 mins)..."
+                  echo "⏳ Waiting for node group $NODEGROUP to become ACTIVE (max 60 mins)..."
             
                   for i in {1..60}; do
                     STATUS=$(aws eks describe-nodegroup \
