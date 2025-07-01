@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     env:
       REGION: us-east-1
       TF_DIR: ./regions/us-east-1
@@ -153,18 +154,19 @@ jobs:
           cat tfplan.txt >> plan_comment.txt
           echo '```' >> plan_comment.txt
 
-      - name: Post Sticky PR Comment
+      - name: Create Pull Request
         if: env.UPGRADE_NEEDED == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: peter-evans/create-pull-request@v5
         with:
-          recreate: true
-          path: ./regions/us-east-1/plan_comment.txt
-
-      - name: Add PR Labels
-        if: env.UPGRADE_NEEDED == 'true'
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: |
-            type: infra-change
-            needs-approval
+            commit-message: "chore: bump EKS version to ${LATEST_VERSION}"
+            branch: eks/upgrade-to-${{ env.LATEST_VERSION }}
+            title: "chore: Upgrade EKS from ${{ env.CURRENT_VERSION }} to ${{ env.LATEST_VERSION }}"
+            body: |
+              This PR was automatically created to upgrade the EKS cluster from version `${{ env.CURRENT_VERSION }}` to `${{ env.LATEST_VERSION }}`.
+  
+              - Please review 'terraform plan' before merging.
+              - Once merged, GitHub Actions will automatically upgrade the cluster.
+            labels: |
+              type: infra-change
+              needs-approval
+            delete-branch: true
