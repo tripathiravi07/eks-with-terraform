@@ -87,7 +87,7 @@ resource "aws_eks_node_group" "eks-ng-1" {
   }
 
   update_config {
-    max_unavailable = 1
+    max_unavailable = 2
   }
 
   # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
