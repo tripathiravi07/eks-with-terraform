@@ -1,0 +1,339 @@
+✅ Terraform plan succeeded
+
+```hcl
+module.eks_cluster.aws_iam_role.karpenter_node: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform]
+module.eks_cluster.aws_iam_policy.aws_lb_controller: Refreshing state... [id=arn:aws:iam::053097998829:policy/AWSLoadBalancerControllerIAMPolicyEKSTerraform]
+module.eks_cluster.aws_iam_policy.karpenter_controller_policy: Refreshing state... [id=arn:aws:iam::053097998829:policy/KarpenterControllerIAMPolicyEKSTerraform]
+module.eks_cluster.aws_iam_role.cluster: Refreshing state... [id=eks-cluster-role]
+module.vpc_network.aws_vpc.eks-vpc: Refreshing state... [id=vpc-03f6f191604b5a059]
+module.eks_cluster.aws_sqs_queue.karpenter_interruption_queue: Refreshing state... [id=https://sqs.us-east-1.amazonaws.com/053097998829/eks-with-terraform]
+module.vpc_network.aws_eip.nat_eip: Refreshing state... [id=eipalloc-0e756fc81ca887907]
+module.eks_cluster.aws_iam_role.node-role: Refreshing state... [id=eks-node-iam-role]
+module.eks_cluster.aws_iam_instance_profile.karpenter_node_instance_profile: Refreshing state... [id=KarpenterNodeInstanceProfile-eks-with-terraform]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250701074342681900000005]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250701074342652400000002]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250701074342661900000004]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250701074342652400000001]
+module.eks_cluster.aws_iam_role_policy_attachment.eks_cluster_policy: Refreshing state... [id=eks-cluster-role-20250701074342659600000003]
+module.eks_cluster.aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly: Refreshing state... [id=eks-node-iam-role-20250701074342760200000008]
+module.eks_cluster.aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicy: Refreshing state... [id=eks-node-iam-role-20250701074342742500000007]
+module.eks_cluster.aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy: Refreshing state... [id=eks-node-iam-role-20250701074342697100000006]
+module.vpc_network.aws_subnet.eks-private-subnets["4"]: Refreshing state... [id=subnet-03cd51cc22f555977]
+module.vpc_network.aws_subnet.eks-public-subnets["0"]: Refreshing state... [id=subnet-0f43181ba01dff5db]
+module.vpc_network.aws_subnet.eks-public-subnets["1"]: Refreshing state... [id=subnet-00c2d586ff23b9a2f]
+module.vpc_network.aws_subnet.eks-private-subnets["5"]: Refreshing state... [id=subnet-0f975780f02c95328]
+module.vpc_network.aws_internet_gateway.eks-vpc-IGW: Refreshing state... [id=igw-031fc9c90e30cc99f]
+module.vpc_network.aws_subnet.eks-public-subnets["2"]: Refreshing state... [id=subnet-076cbad435da2ecdf]
+module.vpc_network.aws_subnet.eks-private-subnets["3"]: Refreshing state... [id=subnet-0ee9b89362e8a183d]
+module.vpc_network.aws_route_table.public_rt: Refreshing state... [id=rtb-064c775113e228986]
+module.vpc_network.aws_nat_gateway.eks-NatGateway: Refreshing state... [id=nat-0c03ef89e6fd20d6f]
+module.eks_cluster.aws_eks_cluster.eks-terraform: Refreshing state... [id=eks-with-terraform]
+module.vpc_network.aws_route_table_association.public_subnet_association["1"]: Refreshing state... [id=rtbassoc-0dd0c59fe0ab6e2bc]
+module.vpc_network.aws_route_table_association.public_subnet_association["0"]: Refreshing state... [id=rtbassoc-0d3344849802a7a30]
+module.vpc_network.aws_route_table_association.public_subnet_association["2"]: Refreshing state... [id=rtbassoc-0933da4f6d304031b]
+module.vpc_network.aws_route_table.private_rt: Refreshing state... [id=rtb-03f939504b3476316]
+module.vpc_network.aws_route_table_association.private_subnet_association["4"]: Refreshing state... [id=rtbassoc-0ebfbf39793ba2891]
+module.vpc_network.aws_route_table_association.private_subnet_association["3"]: Refreshing state... [id=rtbassoc-0383d0920289c0fc1]
+module.vpc_network.aws_route_table_association.private_subnet_association["5"]: Refreshing state... [id=rtbassoc-0a34ed7331b03e79e]
+module.eks_cluster.aws_eks_node_group.eks-ng-1: Refreshing state... [id=eks-with-terraform:eks-ng-1]
+module.eks_cluster.aws_iam_openid_connect_provider.default: Refreshing state... [id=arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90]
+module.eks_cluster.aws_security_group.karpenter_sg: Refreshing state... [id=sg-0606fb6f5bc283123]
+module.eks_cluster.helm_release.karpenter: Refreshing state... [id=karpenter]
+module.eks_cluster.aws_iam_role.karpenter-controller-irsa-role: Refreshing state... [id=karpenter-controller-irsa-role]
+module.eks_cluster.aws_iam_role.aws-lbc-irsa-role: Refreshing state... [id=aws-lbc-irsa-role]
+module.eks_cluster.aws_eks_addon.core-dns: Refreshing state... [id=eks-with-terraform:coredns]
+module.eks_cluster.aws_eks_addon.vpc-cni: Refreshing state... [id=eks-with-terraform:vpc-cni]
+module.eks_cluster.aws_eks_addon.kube-proxy: Refreshing state... [id=eks-with-terraform:kube-proxy]
+module.eks_cluster.aws_iam_role_policy_attachment.attach_karpenter_controller: Refreshing state... [id=karpenter-controller-irsa-role-2025070107504874580000000d]
+module.eks_cluster.kubernetes_service_account.karpenter_controller_sa: Refreshing state... [id=kube-system/karpenter]
+module.eks_cluster.aws_iam_role_policy_attachment.attach_lb_controller: Refreshing state... [id=aws-lbc-irsa-role-2025070107504879020000000e]
+module.eks_cluster.kubernetes_service_account.aws_lb_controller_sa: Refreshing state... [id=kube-system/aws-load-balancer-controller]
+module.eks_cluster.helm_release.aws_load_balancer_controller: Refreshing state... [id=aws-load-balancer-controller]
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the
+last "terraform apply" which may have affected this plan:
+
+  # module.eks_cluster.aws_iam_role.karpenter-controller-irsa-role has changed
+  ~ resource "aws_iam_role" "karpenter-controller-irsa-role" {
+        id                    = "karpenter-controller-irsa-role"
+      ~ managed_policy_arns   = [
+          + "arn:aws:iam::053097998829:policy/KarpenterControllerIAMPolicyEKSTerraform",
+        ]
+        name                  = "karpenter-controller-irsa-role"
+      + tags                  = {}
+        # (11 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the
+relevant attributes using ignore_changes, the following plan may include
+actions to undo or respond to these changes.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+-/+ destroy and then create replacement
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # module.eks_cluster.data.aws_eks_cluster.cluster-sg will be read during apply
+  # (depends on a resource or a module with changes pending)
+ <= data "aws_eks_cluster" "cluster-sg" {
+      + access_config             = (known after apply)
+      + arn                       = (known after apply)
+      + certificate_authority     = (known after apply)
+      + cluster_id                = (known after apply)
+      + compute_config            = (known after apply)
+      + created_at                = (known after apply)
+      + enabled_cluster_log_types = (known after apply)
+      + endpoint                  = (known after apply)
+      + id                        = (known after apply)
+      + identity                  = (known after apply)
+      + kubernetes_network_config = (known after apply)
+      + name                      = "eks-with-terraform"
+      + outpost_config            = (known after apply)
+      + platform_version          = (known after apply)
+      + remote_network_config     = (known after apply)
+      + role_arn                  = (known after apply)
+      + status                    = (known after apply)
+      + storage_config            = (known after apply)
+      + tags                      = (known after apply)
+      + upgrade_policy            = (known after apply)
+      + version                   = (known after apply)
+      + vpc_config                = (known after apply)
+      + zonal_shift_config        = (known after apply)
+    }
+
+  # module.eks_cluster.data.aws_eks_cluster.default will be read during apply
+  # (depends on a resource or a module with changes pending)
+ <= data "aws_eks_cluster" "default" {
+      + access_config             = (known after apply)
+      + arn                       = (known after apply)
+      + certificate_authority     = (known after apply)
+      + cluster_id                = (known after apply)
+      + compute_config            = (known after apply)
+      + created_at                = (known after apply)
+      + enabled_cluster_log_types = (known after apply)
+      + endpoint                  = (known after apply)
+      + id                        = (known after apply)
+      + identity                  = (known after apply)
+      + kubernetes_network_config = (known after apply)
+      + name                      = "eks-with-terraform"
+      + outpost_config            = (known after apply)
+      + platform_version          = (known after apply)
+      + remote_network_config     = (known after apply)
+      + role_arn                  = (known after apply)
+      + status                    = (known after apply)
+      + storage_config            = (known after apply)
+      + tags                      = (known after apply)
+      + upgrade_policy            = (known after apply)
+      + version                   = (known after apply)
+      + vpc_config                = (known after apply)
+      + zonal_shift_config        = (known after apply)
+    }
+
+  # module.eks_cluster.data.aws_eks_cluster.karpenter will be read during apply
+  # (depends on a resource or a module with changes pending)
+ <= data "aws_eks_cluster" "karpenter" {
+      + access_config             = (known after apply)
+      + arn                       = (known after apply)
+      + certificate_authority     = (known after apply)
+      + cluster_id                = (known after apply)
+      + compute_config            = (known after apply)
+      + created_at                = (known after apply)
+      + enabled_cluster_log_types = (known after apply)
+      + endpoint                  = (known after apply)
+      + id                        = (known after apply)
+      + identity                  = (known after apply)
+      + kubernetes_network_config = (known after apply)
+      + name                      = "eks-with-terraform"
+      + outpost_config            = (known after apply)
+      + platform_version          = (known after apply)
+      + remote_network_config     = (known after apply)
+      + role_arn                  = (known after apply)
+      + status                    = (known after apply)
+      + storage_config            = (known after apply)
+      + tags                      = (known after apply)
+      + upgrade_policy            = (known after apply)
+      + version                   = (known after apply)
+      + vpc_config                = (known after apply)
+      + zonal_shift_config        = (known after apply)
+    }
+
+  # module.eks_cluster.data.tls_certificate.default will be read during apply
+  # (config refers to values not yet known)
+ <= data "tls_certificate" "default" {
+      + certificates = (known after apply)
+      + id           = (known after apply)
+      + url          = (known after apply)
+    }
+
+  # module.eks_cluster.data.tls_certificate.karpenter_oidc will be read during apply
+  # (config refers to values not yet known)
+ <= data "tls_certificate" "karpenter_oidc" {
+      + certificates = (known after apply)
+      + id           = (known after apply)
+      + url          = (known after apply)
+    }
+
+  # module.eks_cluster.aws_eks_cluster.eks-terraform will be updated in-place
+  ~ resource "aws_eks_cluster" "eks-terraform" {
+        id                            = "eks-with-terraform"
+        name                          = "eks-with-terraform"
+        tags                          = {}
+      ~ version                       = "1.32" -> "1.33"
+        # (11 unchanged attributes hidden)
+
+        # (4 unchanged blocks hidden)
+    }
+
+  # module.eks_cluster.aws_iam_openid_connect_provider.default must be replaced
+-/+ resource "aws_iam_openid_connect_provider" "default" {
+      ~ arn             = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90" -> (known after apply)
+      ~ id              = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90" -> (known after apply)
+      - tags            = {} -> null
+      ~ tags_all        = {} -> (known after apply)
+      ~ thumbprint_list = [
+          - "9e99a48a9960b14926bb7f3b02e22da2b0ab7280",
+        ] -> (known after apply)
+      ~ url             = "oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90" -> (known after apply) # forces replacement
+        # (1 unchanged attribute hidden)
+    }
+
+  # module.eks_cluster.aws_iam_role.aws-lbc-irsa-role will be updated in-place
+  ~ resource "aws_iam_role" "aws-lbc-irsa-role" {
+      ~ assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRoleWithWebIdentity"
+                      - Condition = {
+                          - StringEquals = {
+                              - "oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90:aud" = "sts.amazonaws.com"
+                              - "oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90:sub" = "system:serviceaccount:default:my-service-account"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Federated = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90"
+                        }
+                      - Sid       = ""
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> (known after apply)
+        id                    = "aws-lbc-irsa-role"
+        name                  = "aws-lbc-irsa-role"
+        tags                  = {}
+        # (11 unchanged attributes hidden)
+    }
+
+  # module.eks_cluster.aws_iam_role.karpenter-controller-irsa-role will be updated in-place
+  ~ resource "aws_iam_role" "karpenter-controller-irsa-role" {
+      ~ assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRoleWithWebIdentity"
+                      - Condition = {
+                          - StringEquals = {
+                              - "oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90:aud" = "sts.amazonaws.com"
+                              - "oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90:sub" = "system:serviceaccount:kube-system:karpenter"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Federated = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/3F8C51F2088C3C3822D20414B3464A90"
+                        }
+                      - Sid       = ""
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> (known after apply)
+        id                    = "karpenter-controller-irsa-role"
+        name                  = "karpenter-controller-irsa-role"
+        tags                  = {}
+        # (11 unchanged attributes hidden)
+    }
+
+  # module.eks_cluster.aws_security_group.karpenter_sg will be updated in-place
+  ~ resource "aws_security_group" "karpenter_sg" {
+        id                     = "sg-0606fb6f5bc283123"
+      ~ ingress                = [
+          - {
+              - cidr_blocks      = []
+              - description      = "Allow internal VPC traffic"
+              - from_port        = 0
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "-1"
+              - security_groups  = [
+                  - "sg-049d9b091321d2953",
+                ]
+              - self             = false
+              - to_port          = 0
+            },
+          + {
+              + cidr_blocks      = []
+              + description      = "Allow internal VPC traffic"
+              + from_port        = 0
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "-1"
+              + security_groups  = (known after apply)
+              + self             = false
+              + to_port          = 0
+            },
+        ]
+        name                   = "karpenter-sg"
+        tags                   = {
+            "Name"                   = "karpenter-sg"
+            "karpenter.sh/discovery" = "eks-with-terraform"
+        }
+        # (8 unchanged attributes hidden)
+    }
+
+  # module.vpc_network.aws_route_table.private_rt will be updated in-place
+  ~ resource "aws_route_table" "private_rt" {
+        id               = "rtb-03f939504b3476316"
+      ~ route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - nat_gateway_id             = "nat-0c03ef89e6fd20d6f"
+                # (11 unchanged attributes hidden)
+            },
+          - {
+              - cidr_block                 = "10.0.0.0/16"
+              - gateway_id                 = "local"
+                # (11 unchanged attributes hidden)
+            },
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + gateway_id                 = "nat-0c03ef89e6fd20d6f"
+                # (11 unchanged attributes hidden)
+            },
+          + {
+              + cidr_block = "10.0.0.0/16"
+              + gateway_id = "local"
+            },
+        ]
+        tags             = {
+            "Name" = "private-rt"
+        }
+        # (5 unchanged attributes hidden)
+    }
+
+Plan: 1 to add, 5 to change, 1 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
+```
