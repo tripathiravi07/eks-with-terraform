@@ -159,6 +159,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
             commit-message: "chore: bump EKS version to ${LATEST_VERSION}"
+            token: ${{ secrets.GH_TOKEN }}
             branch: eks/upgrade-to-${{ env.LATEST_VERSION }}
             title: "chore: Upgrade EKS from ${{ env.CURRENT_VERSION }} to ${{ env.LATEST_VERSION }}"
             body: |
