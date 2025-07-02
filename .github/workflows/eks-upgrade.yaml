@@ -345,6 +345,11 @@ jobs:
             echo "CoreDNS Version: ${{ needs.eks-upgrade.outputs.coredns_version }}"
             echo "VPC CNI Version: ${{ needs.eks-upgrade.outputs.vpc_cni_version }}"
             echo "Kube-Proxy Version: ${{ needs.eks-upgrade.outputs.kube_proxy_version }}"
+      
+      - name: Update Kubeconfig
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+              aws eks update-kubeconfig --region $REGION --name "${{ needs.eks-upgrade.outputs.cluster_name }}"
 
       - name: Collect Post-Upgrade Cluster Info
         run: |
