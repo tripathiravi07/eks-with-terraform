@@ -384,7 +384,6 @@ jobs:
           echo "## 📦 Pod Inventory" >> eks-upgrade-report.md
           cat pods_after.txt >> eks-upgrade-report.md
           echo "## 📊 Node Resource Usage" >> eks-upgrade-report.md
-          cat node_metrics.txt >> eks-upgrade-report.md
 
       - name: Upload Report as Artifact
         uses: actions/upload-artifact@v4
