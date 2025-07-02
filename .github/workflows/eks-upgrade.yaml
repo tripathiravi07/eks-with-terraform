@@ -1,12 +1,11 @@
 name: EKS Upgrade Checker and Upgrader
 
 on:
-  workflow_dispatch:
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types:
-  #     - closed
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
 permissions: write-all
 
 jobs:
