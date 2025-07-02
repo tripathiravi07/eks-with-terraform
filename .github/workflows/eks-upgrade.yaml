@@ -363,7 +363,6 @@ jobs:
 
           # Node Info
           kubectl get nodes -o wide > nodes_after.txt
-          kubectl top nodes > node_metrics.txt || echo "Skipping metrics: kubectl top nodes requires metrics-server"
 
           # Pod Info
           kubectl get pods -A > pods_after.txt
