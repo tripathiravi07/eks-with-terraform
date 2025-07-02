@@ -377,14 +377,12 @@ jobs:
           echo "## 🔧 Add-on Versions" >> eks-upgrade-report.md
           for ADDON in coredns vpc-cni kube-proxy; do
             # Using the uppercase variable names from the eks-upgrade outputs if they were used in your Terraform; adjust as needed.
-            echo "**$ADDON** - Before: $(printenv ${ADDON^^}_VERSION)" >> eks-upgrade-report.md
-            echo "**$ADDON** - After : $(cat post_${ADDON}_version.txt)" >> eks-upgrade-report.md
+            echo "**$ADDON** - Updated : $(cat post_${ADDON}_version.txt)" >> eks-upgrade-report.md
           done
           echo "## 🧠 Node Info (Post Upgrade)" >> eks-upgrade-report.md
           cat nodes_after.txt >> eks-upgrade-report.md
           echo "## 📦 Pod Inventory" >> eks-upgrade-report.md
           cat pods_after.txt >> eks-upgrade-report.md
-          echo "## 📊 Node Resource Usage" >> eks-upgrade-report.md
 
       - name: Upload Report as Artifact
         uses: actions/upload-artifact@v4
