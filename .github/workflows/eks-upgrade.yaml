@@ -308,7 +308,6 @@ jobs:
     name: Generate Upgrade Report
     runs-on: ubuntu-latest
     needs: [eks-upgrade]  # Waits for upgrade to finish
-    if: env.UPGRADE_NEEDED == 'true'
     env:
       REGION: us-east-1
     steps:
