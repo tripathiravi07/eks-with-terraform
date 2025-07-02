@@ -320,6 +320,8 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.REGION }}
+      - name: checking env variables
+        run: echo $CLUSTER_NAME
 
       - name: Collect Post-Upgrade Cluster Info
         run: |
