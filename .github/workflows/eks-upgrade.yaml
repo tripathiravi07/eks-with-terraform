@@ -17,6 +17,13 @@ jobs:
     env:
       REGION: us-east-1
       TF_DIR: ./regions/us-east-1
+    outputs:
+      cluster_name: ${{ steps.set-outputs.outputs.cluster_name }}
+      current_version: ${{ steps.set-outputs.outputs.current_version }}
+      latest_version: ${{ steps.set-outputs.outputs.latest_version }}
+      coredns_version: ${{ steps.set-outputs.outputs.coredns_version }}
+      vpc_cni_version: ${{ steps.set-outputs.outputs.vpc_cni_version }}
+      kube_proxy_version: ${{ steps.set-outputs.outputs.kube_proxy_version }}
 
     steps:
       - name: Checkout code
@@ -304,6 +311,15 @@ jobs:
             fi
         
             echo "✅ Post-upgrade checks passed."
+      - name: Set job outputs for report
+        id: set-outputs
+        run: |
+              echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
+              echo "current_version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+              echo "latest_version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
+              echo "coredns_version=${CORE_DNS_VERSION}" >> $GITHUB_OUTPUT
+              echo "vpc_cni_version=${VPC_CNI_VERSION}" >> $GITHUB_OUTPUT
+              echo "kube_proxy_version=${KUBE_PROXY_VERSION}" >> $GITHUB_OUTPUT
   generate-report:
     name: Generate Upgrade Report
     runs-on: ubuntu-latest
@@ -320,26 +336,25 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.REGION }}
-      - name: checking env variables
-        run: echo $CLUSTER_NAME
+
+      - name: Show Environment Variables from Upgrade Job
+        run: |
+            echo "Cluster Name: ${{ needs.eks-upgrade.outputs.cluster_name }}"
+            echo "Current Version: ${{ needs.eks-upgrade.outputs.current_version }}"
+            echo "Latest Version: ${{ needs.eks-upgrade.outputs.latest_version }}"
+            echo "CoreDNS Version: ${{ needs.eks-upgrade.outputs.coredns_version }}"
+            echo "VPC CNI Version: ${{ needs.eks-upgrade.outputs.vpc_cni_version }}"
+            echo "Kube-Proxy Version: ${{ needs.eks-upgrade.outputs.kube_proxy_version }}"
 
       - name: Collect Post-Upgrade Cluster Info
         run: |
           echo "📊 Collecting post-upgrade metrics..."
-
           # EKS Cluster Version
-          aws eks describe-cluster \
-            --name "$CLUSTER_NAME" \
-            --region "$REGION" \
-            | jq '.cluster.version' > post_cluster_version.txt
+          aws eks describe-cluster --name "${{ needs.eks-upgrade.outputs.cluster_name }}" --region "$REGION" | jq '.cluster.version' > post_cluster_version.txt
 
           # Add-on Versions
           for ADDON in coredns vpc-cni kube-proxy; do
-            aws eks describe-addon \
-              --cluster-name "$CLUSTER_NAME" \
-              --addon-name "$ADDON" \
-              --region "$REGION" \
-              | jq '.addon.addonVersion' > post_${ADDON}_version.txt
+            aws eks describe-addon --cluster-name "${{ needs.eks-upgrade.outputs.cluster_name }}" --addon-name "$ADDON" --region "$REGION" | jq '.addon.addonVersion' > post_${ADDON}_version.txt
           done
 
           # Node Info
@@ -352,23 +367,19 @@ jobs:
       - name: Compare with Pre-upgrade Info
         run: |
           echo "# 🧾 EKS Upgrade Report" > eks-upgrade-report.md
-
           echo "## ✅ EKS Version" >> eks-upgrade-report.md
-          echo "**Before**: $CURRENT_VERSION" >> eks-upgrade-report.md
+          echo "**Before**: ${{ needs.eks-upgrade.outputs.current_version }}" >> eks-upgrade-report.md
           echo "**After**: $(cat post_cluster_version.txt)" >> eks-upgrade-report.md
-
           echo "## 🔧 Add-on Versions" >> eks-upgrade-report.md
           for ADDON in coredns vpc-cni kube-proxy; do
-            echo "**$ADDON** - Before: ${ADDON^^}_VERSION=${!ADDON^^_VERSION}" >> eks-upgrade-report.md
+            # Using the uppercase variable names from the eks-upgrade outputs if they were used in your Terraform; adjust as needed.
+            echo "**$ADDON** - Before: $(printenv ${ADDON^^}_VERSION)" >> eks-upgrade-report.md
             echo "**$ADDON** - After : $(cat post_${ADDON}_version.txt)" >> eks-upgrade-report.md
           done
-
           echo "## 🧠 Node Info (Post Upgrade)" >> eks-upgrade-report.md
           cat nodes_after.txt >> eks-upgrade-report.md
-
           echo "## 📦 Pod Inventory" >> eks-upgrade-report.md
           cat pods_after.txt >> eks-upgrade-report.md
-
           echo "## 📊 Node Resource Usage" >> eks-upgrade-report.md
           cat node_metrics.txt >> eks-upgrade-report.md
 
