@@ -284,6 +284,8 @@ jobs:
                   done
                 done
 
+      - name: 😴 so that things gets stablize
+        run: sleep 180
       - name: Post-Upgrade Validation
         if: env.UPGRADE_NEEDED == 'true'
         run: |
