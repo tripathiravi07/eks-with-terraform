@@ -1,53 +1,53 @@
 ✅ Terraform plan succeeded
 
 ```hcl
-module.eks_cluster.aws_iam_role.cluster: Refreshing state... [id=eks-cluster-role]
-module.vpc_network.aws_vpc.eks-vpc: Refreshing state... [id=vpc-0e989de870f9a1939]
-module.eks_cluster.aws_iam_policy.karpenter_controller_policy: Refreshing state... [id=arn:aws:iam::053097998829:policy/KarpenterControllerIAMPolicyEKSTerraform]
 module.eks_cluster.aws_iam_role.karpenter_node: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform]
 module.eks_cluster.aws_iam_policy.aws_lb_controller: Refreshing state... [id=arn:aws:iam::053097998829:policy/AWSLoadBalancerControllerIAMPolicyEKSTerraform]
-module.eks_cluster.aws_sqs_queue.karpenter_interruption_queue: Refreshing state... [id=https://sqs.us-east-1.amazonaws.com/053097998829/eks-with-terraform]
-module.vpc_network.aws_eip.nat_eip: Refreshing state... [id=eipalloc-0fe2ce8737484248c]
+module.vpc_network.aws_vpc.eks-vpc: Refreshing state... [id=vpc-0d0c83a80e2cf6075]
+module.eks_cluster.aws_iam_policy.karpenter_controller_policy: Refreshing state... [id=arn:aws:iam::053097998829:policy/KarpenterControllerIAMPolicyEKSTerraform]
 module.eks_cluster.aws_iam_role.node-role: Refreshing state... [id=eks-node-iam-role]
-module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711065704383600000001]
-module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711065704386300000002]
-module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711065704392200000004]
-module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711065704390300000003]
+module.vpc_network.aws_eip.nat_eip: Refreshing state... [id=eipalloc-0c74b5cae908d9052]
+module.eks_cluster.aws_iam_role.cluster: Refreshing state... [id=eks-cluster-role]
+module.eks_cluster.aws_sqs_queue.karpenter_interruption_queue: Refreshing state... [id=https://sqs.us-east-1.amazonaws.com/053097998829/eks-with-terraform]
 module.eks_cluster.aws_iam_instance_profile.karpenter_node_instance_profile: Refreshing state... [id=KarpenterNodeInstanceProfile-eks-with-terraform]
-module.eks_cluster.aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly: Refreshing state... [id=eks-node-iam-role-20250711065704510000000008]
-module.eks_cluster.aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy: Refreshing state... [id=eks-node-iam-role-20250711065704470000000006]
-module.eks_cluster.aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicy: Refreshing state... [id=eks-node-iam-role-20250711065704509900000007]
-module.eks_cluster.aws_iam_role_policy_attachment.eks_cluster_policy: Refreshing state... [id=eks-cluster-role-20250711065704463600000005]
-module.vpc_network.aws_internet_gateway.eks-vpc-IGW: Refreshing state... [id=igw-00ee0eb0ecd6c477c]
-module.vpc_network.aws_subnet.eks-private-subnets["4"]: Refreshing state... [id=subnet-0c13dfdfb69b81891]
-module.vpc_network.aws_subnet.eks-private-subnets["3"]: Refreshing state... [id=subnet-0dd000d5c06dffa25]
-module.vpc_network.aws_subnet.eks-public-subnets["0"]: Refreshing state... [id=subnet-0c5e5f8caed814525]
-module.vpc_network.aws_subnet.eks-public-subnets["2"]: Refreshing state... [id=subnet-01462573d28e7686c]
-module.vpc_network.aws_subnet.eks-public-subnets["1"]: Refreshing state... [id=subnet-062b6c89777e6abb1]
-module.vpc_network.aws_subnet.eks-private-subnets["5"]: Refreshing state... [id=subnet-0d6b62a1f3aabbf20]
-module.vpc_network.aws_route_table.public_rt: Refreshing state... [id=rtb-0c1ba0d03aebb7727]
-module.vpc_network.aws_route_table_association.public_subnet_association["0"]: Refreshing state... [id=rtbassoc-05ecd0af23b114c2f]
-module.vpc_network.aws_route_table_association.public_subnet_association["1"]: Refreshing state... [id=rtbassoc-03ba7bc3825cb57f2]
-module.vpc_network.aws_route_table_association.public_subnet_association["2"]: Refreshing state... [id=rtbassoc-0d33c71b8b3c8d62e]
-module.vpc_network.aws_nat_gateway.eks-NatGateway: Refreshing state... [id=nat-0eb381c1d8833cfab]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711081431986800000006]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711081432051400000008]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711081431991200000007]
+module.eks_cluster.aws_iam_role_policy_attachment.node_policy["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]: Refreshing state... [id=KarpenterNodeRole-eks-with-terraform-20250711081431962100000004]
+module.eks_cluster.aws_iam_role_policy_attachment.eks_cluster_policy: Refreshing state... [id=eks-cluster-role-20250711081431936100000001]
+module.eks_cluster.aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly: Refreshing state... [id=eks-node-iam-role-20250711081431964200000005]
+module.eks_cluster.aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicy: Refreshing state... [id=eks-node-iam-role-20250711081431959900000003]
+module.eks_cluster.aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy: Refreshing state... [id=eks-node-iam-role-20250711081431955000000002]
+module.vpc_network.aws_internet_gateway.eks-vpc-IGW: Refreshing state... [id=igw-01de8e798c8633f0a]
+module.vpc_network.aws_subnet.eks-public-subnets["2"]: Refreshing state... [id=subnet-0e7845f30bdc939ee]
+module.vpc_network.aws_subnet.eks-public-subnets["1"]: Refreshing state... [id=subnet-03f17511e06a3f9cb]
+module.vpc_network.aws_subnet.eks-private-subnets["4"]: Refreshing state... [id=subnet-0302dc8b9cce3fcb7]
+module.vpc_network.aws_subnet.eks-private-subnets["3"]: Refreshing state... [id=subnet-015d5d6f6e4c087ea]
+module.vpc_network.aws_subnet.eks-private-subnets["5"]: Refreshing state... [id=subnet-0a7aa47fd14489d4b]
+module.vpc_network.aws_subnet.eks-public-subnets["0"]: Refreshing state... [id=subnet-0c88492deafa9c55a]
+module.vpc_network.aws_route_table.public_rt: Refreshing state... [id=rtb-0a14221536d70e382]
+module.vpc_network.aws_nat_gateway.eks-NatGateway: Refreshing state... [id=nat-065a58d13c14aa0c2]
+module.vpc_network.aws_route_table_association.public_subnet_association["1"]: Refreshing state... [id=rtbassoc-043f8a0a10eff977b]
+module.vpc_network.aws_route_table_association.public_subnet_association["0"]: Refreshing state... [id=rtbassoc-00cfb9a99260d8d26]
+module.vpc_network.aws_route_table_association.public_subnet_association["2"]: Refreshing state... [id=rtbassoc-0f25240ee746d36bb]
 module.eks_cluster.aws_eks_cluster.eks-terraform: Refreshing state... [id=eks-with-terraform]
-module.vpc_network.aws_route_table.private_rt: Refreshing state... [id=rtb-06e5be2a360895578]
-module.vpc_network.aws_route_table_association.private_subnet_association["3"]: Refreshing state... [id=rtbassoc-0e752a0aa52aabc25]
-module.vpc_network.aws_route_table_association.private_subnet_association["4"]: Refreshing state... [id=rtbassoc-0da419d37246d0660]
-module.vpc_network.aws_route_table_association.private_subnet_association["5"]: Refreshing state... [id=rtbassoc-01b741fbc386b42a1]
-module.eks_cluster.aws_iam_openid_connect_provider.default: Refreshing state... [id=arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261]
-module.eks_cluster.aws_security_group.karpenter_sg: Refreshing state... [id=sg-02be8943f0ed187cb]
+module.vpc_network.aws_route_table.private_rt: Refreshing state... [id=rtb-0fba8a683a87985ee]
+module.vpc_network.aws_route_table_association.private_subnet_association["3"]: Refreshing state... [id=rtbassoc-081c2f9b987a33a4f]
+module.vpc_network.aws_route_table_association.private_subnet_association["5"]: Refreshing state... [id=rtbassoc-0ee5367000be57276]
+module.vpc_network.aws_route_table_association.private_subnet_association["4"]: Refreshing state... [id=rtbassoc-0d34a7413d0fbfcb4]
 module.eks_cluster.aws_eks_node_group.eks-ng-1: Refreshing state... [id=eks-with-terraform:eks-ng-1]
+module.eks_cluster.aws_iam_openid_connect_provider.default: Refreshing state... [id=arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6]
+module.eks_cluster.aws_security_group.karpenter_sg: Refreshing state... [id=sg-0562d92d3c33cc074]
 module.eks_cluster.helm_release.karpenter: Refreshing state... [id=karpenter]
-module.eks_cluster.aws_iam_role.karpenter-controller-irsa-role: Refreshing state... [id=karpenter-controller-irsa-role]
 module.eks_cluster.aws_iam_role.aws-lbc-irsa-role: Refreshing state... [id=aws-lbc-irsa-role]
-module.eks_cluster.aws_eks_addon.kube-proxy: Refreshing state... [id=eks-with-terraform:kube-proxy]
-module.eks_cluster.aws_eks_addon.core-dns: Refreshing state... [id=eks-with-terraform:coredns]
-module.eks_cluster.aws_eks_addon.vpc-cni: Refreshing state... [id=eks-with-terraform:vpc-cni]
-module.eks_cluster.aws_iam_role_policy_attachment.attach_lb_controller: Refreshing state... [id=aws-lbc-irsa-role-2025071107045258510000000d]
+module.eks_cluster.aws_iam_role.karpenter-controller-irsa-role: Refreshing state... [id=karpenter-controller-irsa-role]
+module.eks_cluster.aws_iam_role_policy_attachment.attach_lb_controller: Refreshing state... [id=aws-lbc-irsa-role-2025071108213909280000000e]
 module.eks_cluster.kubernetes_service_account.aws_lb_controller_sa: Refreshing state... [id=kube-system/aws-load-balancer-controller]
-module.eks_cluster.aws_iam_role_policy_attachment.attach_karpenter_controller: Refreshing state... [id=karpenter-controller-irsa-role-2025071107045259070000000e]
+module.eks_cluster.aws_eks_addon.core-dns: Refreshing state... [id=eks-with-terraform:coredns]
+module.eks_cluster.aws_eks_addon.kube-proxy: Refreshing state... [id=eks-with-terraform:kube-proxy]
+module.eks_cluster.aws_eks_addon.vpc-cni: Refreshing state... [id=eks-with-terraform:vpc-cni]
 module.eks_cluster.kubernetes_service_account.karpenter_controller_sa: Refreshing state... [id=kube-system/karpenter]
+module.eks_cluster.aws_iam_role_policy_attachment.attach_karpenter_controller: Refreshing state... [id=karpenter-controller-irsa-role-2025071108213902050000000d]
 module.eks_cluster.helm_release.aws_load_balancer_controller: Refreshing state... [id=aws-load-balancer-controller]
 
 Note: Objects have changed outside of Terraform
@@ -194,14 +194,14 @@ Terraform will perform the following actions:
 
   # module.eks_cluster.aws_iam_openid_connect_provider.default must be replaced
 -/+ resource "aws_iam_openid_connect_provider" "default" {
-      ~ arn             = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261" -> (known after apply)
-      ~ id              = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261" -> (known after apply)
+      ~ arn             = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6" -> (known after apply)
+      ~ id              = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6" -> (known after apply)
       - tags            = {} -> null
       ~ tags_all        = {} -> (known after apply)
       ~ thumbprint_list = [
           - "9e99a48a9960b14926bb7f3b02e22da2b0ab7280",
         ] -> (known after apply)
-      ~ url             = "oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261" -> (known after apply) # forces replacement
+      ~ url             = "oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6" -> (known after apply) # forces replacement
         # (1 unchanged attribute hidden)
     }
 
@@ -214,13 +214,13 @@ Terraform will perform the following actions:
                       - Action    = "sts:AssumeRoleWithWebIdentity"
                       - Condition = {
                           - StringEquals = {
-                              - "oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261:aud" = "sts.amazonaws.com"
-                              - "oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261:sub" = "system:serviceaccount:default:my-service-account"
+                              - "oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6:aud" = "sts.amazonaws.com"
+                              - "oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6:sub" = "system:serviceaccount:default:my-service-account"
                             }
                         }
                       - Effect    = "Allow"
                       - Principal = {
-                          - Federated = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261"
+                          - Federated = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6"
                         }
                       - Sid       = ""
                     },
@@ -243,13 +243,13 @@ Terraform will perform the following actions:
                       - Action    = "sts:AssumeRoleWithWebIdentity"
                       - Condition = {
                           - StringEquals = {
-                              - "oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261:aud" = "sts.amazonaws.com"
-                              - "oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261:sub" = "system:serviceaccount:kube-system:karpenter"
+                              - "oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6:aud" = "sts.amazonaws.com"
+                              - "oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6:sub" = "system:serviceaccount:kube-system:karpenter"
                             }
                         }
                       - Effect    = "Allow"
                       - Principal = {
-                          - Federated = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/6B9DC97002B1B30C716CE25876F5A261"
+                          - Federated = "arn:aws:iam::053097998829:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/E25B8FCBEB7C8C57FE6063876C838AD6"
                         }
                       - Sid       = ""
                     },
@@ -265,7 +265,7 @@ Terraform will perform the following actions:
 
   # module.eks_cluster.aws_security_group.karpenter_sg will be updated in-place
   ~ resource "aws_security_group" "karpenter_sg" {
-        id                     = "sg-02be8943f0ed187cb"
+        id                     = "sg-0562d92d3c33cc074"
       ~ ingress                = [
           - {
               - cidr_blocks      = []
@@ -275,7 +275,7 @@ Terraform will perform the following actions:
               - prefix_list_ids  = []
               - protocol         = "-1"
               - security_groups  = [
-                  - "sg-010d04dad3a1898ff",
+                  - "sg-05a9613b04d1c0683",
                 ]
               - self             = false
               - to_port          = 0
@@ -302,11 +302,11 @@ Terraform will perform the following actions:
 
   # module.vpc_network.aws_route_table.private_rt will be updated in-place
   ~ resource "aws_route_table" "private_rt" {
-        id               = "rtb-06e5be2a360895578"
+        id               = "rtb-0fba8a683a87985ee"
       ~ route            = [
           - {
               - cidr_block                 = "0.0.0.0/0"
-              - nat_gateway_id             = "nat-0eb381c1d8833cfab"
+              - nat_gateway_id             = "nat-065a58d13c14aa0c2"
                 # (11 unchanged attributes hidden)
             },
           - {
@@ -316,7 +316,7 @@ Terraform will perform the following actions:
             },
           + {
               + cidr_block                 = "0.0.0.0/0"
-              + gateway_id                 = "nat-0eb381c1d8833cfab"
+              + gateway_id                 = "nat-065a58d13c14aa0c2"
                 # (11 unchanged attributes hidden)
             },
           + {
