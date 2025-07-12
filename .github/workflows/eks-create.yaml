@@ -1,4 +1,4 @@
-name: EKS Cluster Provisioning In AWS.
+name: EKS Cluster Provisioning In AWS
 on:
     push:
       branches:

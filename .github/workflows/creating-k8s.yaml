@@ -2,7 +2,7 @@ name: Installing K8S Components
 
 on:
   workflow_run:
-    workflows: ["EKS Cluster Provisioning in AWS"]
+    workflows: [EKS Cluster Provisioning In AWS]
     types:
       - completed
 
