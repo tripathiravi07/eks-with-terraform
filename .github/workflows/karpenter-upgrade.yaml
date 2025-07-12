@@ -1,12 +1,12 @@
 name: Karpenter Node Group Update Check
 
-on:
-    workflow_dispatch:
 # on:
-#     workflow_run:
-#       workflows: [EKS Upgrade Checker and Upgrader]
-#       types:
-#         - completed
+#     workflow_dispatch:
+on:
+    workflow_run:
+      workflows: [EKS Upgrade Checker and Upgrader]
+      types:
+        - completed
 permissions: write-all
 
 jobs:
