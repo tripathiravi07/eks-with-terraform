@@ -1,7 +1,10 @@
 name: Installing K8S Components
 
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["EKS Cluster Provisioning in AWS"]
+    types:
+      - completed
 
 permissions: write-all
 
