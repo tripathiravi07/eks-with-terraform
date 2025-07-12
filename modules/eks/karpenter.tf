@@ -195,3 +195,5 @@ resource "aws_security_group" "karpenter_sg" {
     "karpenter.sh/discovery"   = aws_eks_cluster.eks-terraform.name
   }
 }
+
+# Need to add access entry for Karpenter Node IAM Role

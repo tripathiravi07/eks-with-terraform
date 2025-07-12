@@ -93,6 +93,8 @@ resource "aws_subnet" "eks-public-subnets" {
   tags = {
     Name = "PublicSubnet-${each.key}"
     team = local.team
+    "kubernetes.io/role/elb" = 1
+    "kubernetes.io/cluster/eks-with-terraform" = owned
   }
 }
 
@@ -106,5 +108,7 @@ resource "aws_subnet" "eks-private-subnets" {
     Name = "Private-${each.key}"
     team = local.team
     "karpenter.sh/discovery" = local.discovery
+    "kubernetes.io/role/internal-elb" = 1
+    "kubernetes.io/cluster/eks-with-terraform" = owned
   }
 }
