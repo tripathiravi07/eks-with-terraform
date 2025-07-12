@@ -91,6 +91,7 @@ metadata:
     alb.ingress.kubernetes.io/group.name: zero-downtime-group
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=60
 spec:
+  ingressClassName: alb
   rules:
     - http:
         paths:
