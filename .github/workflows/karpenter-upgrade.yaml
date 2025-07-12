@@ -33,25 +33,20 @@ jobs:
 
       - name: Install Dependencies (Terraform 1.5.7, kubectl, jq)
         run: |
-            # sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
-            # sudo apt-get install -y unzip jq curl 
-            # echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-            # wget -O- https://apt.releases.hashicorp.com/gpg | \
-            # gpg --dearmor | \
-            # sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
-            # gpg --no-default-keyring \
-            # --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
-            # --fingerprint
+            sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+            sudo apt-get install -y unzip jq curl 
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+            wget -O- https://apt.releases.hashicorp.com/gpg | \
+            gpg --dearmor | \
+            sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+            gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+            --fingerprint
             
             echo "Installing kubectl..."
             curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.32.3/2025-04-17/bin/linux/amd64/kubectl
             chmod +x ./kubectl
             mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
-
-            sudo apt update
-            sudo apt-get install terraform
-            echo "Verifying Installation"
-            terraform -help
 
       - name: Get Cluster Name from Terraform Output
         id: get-cluster
@@ -71,7 +66,7 @@ jobs:
       - name: Update Kubeconfig
         run: |
                 aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
-                
+
       - name: Verify Karpenter Nodes Match Current Cluster Version
         id: verify-nodes
         run: |
