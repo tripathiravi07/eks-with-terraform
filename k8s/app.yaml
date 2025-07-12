@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: sample-app
-          image: ravitripathi/app:v2
+          image: 053097998829.dkr.ecr.us-east-1.amazonaws.com/app:v2
           ports:
             - containerPort: 8080
           readinessProbe:
@@ -46,6 +46,8 @@ spec:
             preStop:
               exec:
                 command: ["sh", "-c", "echo PreStop hook sleeping; sleep 10"]
+      nodeSelector:
+        workload-type: memory-intensive
       terminationGracePeriodSeconds: 60
 ---
 apiVersion: v1
