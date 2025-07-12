@@ -12,7 +12,7 @@ resource "aws_iam_role" "aws-lbc-irsa-role" {
       Action = "sts:AssumeRoleWithWebIdentity",
       Condition = {
         StringEquals = {
-            "${aws_iam_openid_connect_provider.default.url}:sub" = "system:serviceaccount:default:my-service-account"
+            "${aws_iam_openid_connect_provider.default.url}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
             "${aws_iam_openid_connect_provider.default.url}:aud" = "sts.amazonaws.com"
           }
       }
