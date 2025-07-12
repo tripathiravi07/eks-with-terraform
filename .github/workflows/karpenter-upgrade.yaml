@@ -1,0 +1,90 @@
+name: Karpenter Node Group Update Check
+
+on:
+    workflow_run:
+      workflows: [EKS Upgrade Checker and Upgrader]
+      types:
+        - completed
+permissions: write-all
+
+jobs:
+  eks-plan:
+    name: Terraform Plan for EKS Upgrade (Only if Needed)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      REGION: us-east-1
+      TF_DIR: ./regions/us-east-1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Install Dependencies (Terraform 1.5.7, kubectl, jq)
+        run: |
+            sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+            sudo apt-get install -y unzip jq curl 
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+            wget -O- https://apt.releases.hashicorp.com/gpg | \
+            gpg --dearmor | \
+            sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+            gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+            --fingerprint
+  
+            sudo apt update
+            sudo apt-get install terraform
+            echo "Verifying Installation"
+            terraform -help
+
+      - name: Get Cluster Name from Terraform Output
+        id: get-cluster
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+          TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+          TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+        run: |
+          terraform init -reconfigure \
+            -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+            -backend-config="key=${TF_BACKEND_KEY}" \
+            -backend-config="region=${TF_BACKEND_REGION}"
+          CLUSTER_NAME=$(terraform output -json | jq -r '.["eks-cluster-name"].value')
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+
+      - name: Verify Karpenter Nodes Match Current Cluster Version
+        id: verify-nodes
+        run: |
+          echo "✅ Getting list of Karpenter nodes..."
+          CURRENT_VERSION=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION | jq -r '.cluster.version')
+          echo "Current cluster version: $CURRENT_VERSION"
+
+          KARPENTER_NODES=$(kubectl get nodes -l karpenter.sh/registered=true -o json)
+          TOTAL_NODES=$(echo "$KARPENTER_NODES" | jq '.items | length')
+
+          if [ "$TOTAL_NODES" -eq 0 ]; then
+            echo "⚠️ No Karpenter-managed nodes found. Exiting."
+            exit 1
+          fi
+
+          NON_MATCHING_NODES=$(echo "$KARPENTER_NODES" | jq -r --arg v "$CURRENT_VERSION" '
+            .items[] | select(.status.nodeInfo.kubeletVersion | contains($v) | not) | .metadata.name
+          ')
+
+          if [ -n "$NON_MATCHING_NODES" ]; then
+            echo "❌ The following Karpenter nodes are NOT on version $CURRENT_VERSION:"
+            echo "$NON_MATCHING_NODES"
+            echo "Exiting workflow early."
+            exit 1
+          else
+            echo "✅ All Karpenter nodes are on the correct Kubernetes version: $CURRENT_VERSION"
+          fi 
