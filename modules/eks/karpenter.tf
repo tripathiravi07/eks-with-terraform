@@ -143,6 +143,9 @@ resource "helm_release" "karpenter" {
     name  = "serviceAccount.name"
     value = "karpenter"
   }
+  depends_on = [
+     aws_eks_node_group.eks-ng-1
+   ]
 }
 #   set {
 #     name  = "cluster.endpoint"
