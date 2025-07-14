@@ -74,7 +74,8 @@ resource "helm_release" "aws_load_balancer_controller" {
   }
 
   depends_on = [
-     kubernetes_service_account.aws_lb_controller_sa,
-     aws_eks_node_group.eks-ng-1
+    aws_eks_cluster.eks-terraform,
+    aws_eks_node_group.eks-ng-1,
+    kubernetes_service_account.aws_lb_controller_sa
    ]
 }
