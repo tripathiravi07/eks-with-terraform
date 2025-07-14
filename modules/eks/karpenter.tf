@@ -202,13 +202,3 @@ resource "aws_eks_access_entry" "karpenter" {
   principal_arn = aws_iam_role.karpenter_node.arn
   type          = "STANDARD"
 }
-
-resource "aws_eks_access_policy_association" "karpenter_node" {
-  cluster_name  = aws_eks_cluster.eks-terraform.name
-  principal_arn = aws_iam_role.karpenter_node.arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSWorkerNodePolicy"
-
-  access_scope {
-    type = "cluster"
-  }
-}
