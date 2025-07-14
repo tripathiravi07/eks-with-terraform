@@ -106,21 +106,19 @@ resource "aws_eks_addon" "core-dns" {
   cluster_name                = aws_eks_cluster.eks-terraform.name
   addon_name                  = "coredns"
   addon_version               = var.coredns-version
-  resolve_conflicts_on_update = "PRESERVE"
+
 }
 resource "aws_eks_addon" "kube-proxy" {
   depends_on = [ aws_eks_node_group.eks-ng-1 ]
   cluster_name                = aws_eks_cluster.eks-terraform.name
   addon_name                  = "kube-proxy"
   addon_version               = var.kube-proxy-version
-  resolve_conflicts_on_update = "PRESERVE"
 }
 resource "aws_eks_addon" "vpc-cni" {
   depends_on = [ aws_eks_node_group.eks-ng-1 ]
   cluster_name                = aws_eks_cluster.eks-terraform.name
   addon_name                  = "vpc-cni"
   addon_version               = var.vpc-cni-version
-  resolve_conflicts_on_update = "PRESERVE"
 }
 # Grabbing EKS Cluster Name
 data "aws_eks_cluster" "default" {
