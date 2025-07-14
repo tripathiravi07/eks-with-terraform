@@ -25,6 +25,10 @@ jobs:
       vpc_cni_version: ${{ steps.set-outputs.outputs.vpc_cni_version }}
       kube_proxy_version: ${{ steps.set-outputs.outputs.kube_proxy_version }}
 
+      coredns_latest: ${{ steps.set-outputs.outputs.coredns_latest }}
+      vpc_cni_latest: ${{ steps.set-outputs.outputs.vpc_cni_latest }}
+      kube_proxy_latest: ${{ steps.set-outputs.outputs.kube_proxy_latest }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -222,7 +226,8 @@ jobs:
                   echo "❌ Could not find a compatible version for $ADDON with Kubernetes $LATEST_VERSION"
                   continue
                 fi
-          
+                echo "✅ Found latest version for $ADDON: $ADDON_VERSION"
+ 
                 echo "⬆️ Upgrading $ADDON to version $ADDON_VERSION..."
                 aws eks update-addon \
                   --cluster-name "$CLUSTER_NAME" \
@@ -286,6 +291,32 @@ jobs:
 
       - name: 😴 so that things gets stablize
         run: sleep 180
+      
+      - name: Get Latest Add-on Versions for existing cluster
+        if: env.UPGRADE_NEEDED == 'true'
+        run: |
+          echo "🔍 Fetching current add-on versions for cluster: $CLUSTER_NAME"
+
+          CORE_DNS_LATEST=$(aws eks describe-addon \
+          --cluster-name "$CLUSTER_NAME" \
+          --addon-name coredns \
+          --region "$REGION" | jq -r '.addon.addonVersion')
+
+          VPC_CNI_LATEST=$(aws eks describe-addon \
+          --cluster-name "$CLUSTER_NAME" \
+          --addon-name vpc-cni \
+          --region "$REGION" | jq -r '.addon.addonVersion')
+
+          KUBE_PROXY_LATEST=$(aws eks describe-addon \
+          --cluster-name "$CLUSTER_NAME" \
+          --addon-name kube-proxy \
+          --region "$REGION" | jq -r '.addon.addonVersion')
+
+          echo "CORE_DNS_LATEST=$CORE_DNS_LATEST" >> $GITHUB_ENV
+          echo "VPC_CNI_LATEST=$VPC_CNI_LATEST" >> $GITHUB_ENV
+          echo "KUBE_PROXY_LATEST=$KUBE_PROXY_LATEST" >> $GITHUB_ENV
+          echo "✅ Exported latest add-on versions"
+
       - name: Post-Upgrade Validation
         if: env.UPGRADE_NEEDED == 'true'
         run: |
@@ -322,6 +353,10 @@ jobs:
               echo "coredns_version=${CORE_DNS_VERSION}" >> $GITHUB_OUTPUT
               echo "vpc_cni_version=${VPC_CNI_VERSION}" >> $GITHUB_OUTPUT
               echo "kube_proxy_version=${KUBE_PROXY_VERSION}" >> $GITHUB_OUTPUT
+
+              echo "coredns_latest=${CORE_DNS_LATEST}" >> $GITHUB_OUTPUT
+              echo "vpc_cni_latest=${VPC_CNI_LATEST}" >> $GITHUB_OUTPUT
+              echo "kube_proxy_latest=${KUBE_PROXY_LATEST}" >> $GITHUB_OUTPUT
   generate-report:
     name: Generate Upgrade Report
     runs-on: ubuntu-latest
@@ -375,7 +410,12 @@ jobs:
           echo "## ✅ EKS Version" >> eks-upgrade-report.md
           echo "**Before**: ${{ needs.eks-upgrade.outputs.current_version }}" >> eks-upgrade-report.md
           echo "**After**: $(cat post_cluster_version.txt)" >> eks-upgrade-report.md
-          echo "## 🔧 Add-on Versions" >> eks-upgrade-report.md
+          echo "## 🔧 Add-on Versions Latest" >> eks-upgrade-report.md
+          echo "**coredns** - Old : ${{ needs.eks-upgrade.outputs.coredns_latest }}" >> eks-upgrade-report.md
+          echo "**vpc-cni** - Old : ${{ needs.eks-upgrade.outputs.vpc_cni_latest }}" >> eks-upgrade-report.md
+          echo "**coredns** - Old : ${{ needs.eks-upgrade.outputs.kube_proxy_latest }}" >> eks-upgrade-report.md
+
+          echo "## 🔧 Add-on Versions Previous" >> eks-upgrade-report.md
           for ADDON in coredns vpc-cni kube-proxy; do
             # Using the uppercase variable names from the eks-upgrade outputs if they were used in your Terraform; adjust as needed.
             echo "**$ADDON** - Updated : $(cat post_${ADDON}_version.txt)" >> eks-upgrade-report.md
