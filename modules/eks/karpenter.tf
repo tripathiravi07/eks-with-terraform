@@ -203,5 +203,5 @@ resource "aws_security_group" "karpenter_sg" {
 resource "aws_eks_access_entry" "karpenter" {
   cluster_name  = aws_eks_cluster.eks-terraform.name
   principal_arn = aws_iam_role.karpenter_node.arn
-  type          = "STANDARD"
+  type          = "EC2_LINUX"
 }
