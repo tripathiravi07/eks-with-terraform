@@ -21,9 +21,13 @@ jobs:
       cluster_name: ${{ steps.set-outputs.outputs.cluster_name }}
       current_version: ${{ steps.set-outputs.outputs.current_version }}
       latest_version: ${{ steps.set-outputs.outputs.latest_version }}
-      coredns_version: ${{ steps.set-outputs.outputs.coredns_version }}
-      vpc_cni_version: ${{ steps.set-outputs.outputs.vpc_cni_version }}
-      kube_proxy_version: ${{ steps.set-outputs.outputs.kube_proxy_version }}
+
+      coredns_current: ${{ steps.upgrade-addons.outputs.coredns_current }}
+      coredns_latest: ${{ steps.upgrade-addons.outputs.coredns_latest }}
+      vpc_cni_current: ${{ steps.upgrade-addons.outputs.vpc_cni_current }}
+      vpc_cni_latest: ${{ steps.upgrade-addons.outputs.vpc_cni_latest }}
+      kube_proxy_current: ${{ steps.upgrade-addons.outputs.kube_proxy_current }}
+      kube_proxy_latest: ${{ steps.upgrade-addons.outputs.kube_proxy_latest }}
 
     steps:
       - name: Checkout code
@@ -142,7 +146,7 @@ jobs:
         
             echo "✅ Pre-upgrade checks passed."
 
-      - name: Get Current Add-on Versions
+      - name: Get Current Add-on Versions for existing cluster
         if: env.UPGRADE_NEEDED == 'true'
         run: |
           echo "🔍 Fetching current add-on versions for cluster: $CLUSTER_NAME"
@@ -200,6 +204,7 @@ jobs:
       
       - name: Upgrade EKS Add-ons
         if: env.UPGRADE_NEEDED == 'true'
+        id: upgrade-addons
         run: |
               echo "🔍 Listing installed add-ons for cluster: $CLUSTER_NAME"
               ADDONS=$(aws eks list-addons --cluster-name "$CLUSTER_NAME" --region "$REGION" | jq -r '.addons[]')
@@ -210,28 +215,57 @@ jobs:
               fi
           
               for ADDON in $ADDONS; do
-                echo "🔄 Checking latest version for add-on: $ADDON"
+                echo "🔄 Processing add-on: $ADDON"
           
-                ADDON_VERSION=$(aws eks describe-addon-versions \
+                # Get current installed version
+                CURRENT_VERSION=$(aws eks describe-addon \
+                  --cluster-name "$CLUSTER_NAME" \
+                  --addon-name "$ADDON" \
+                  --region "$REGION" \
+                  | jq -r '.addon.addonVersion')
+          
+                echo "🔎 Current version of $ADDON: $CURRENT_VERSION"
+          
+                # Get latest available version for current Kubernetes version
+                LATEST_VERSION=$(aws eks describe-addon-versions \
                   --addon-name "$ADDON" \
                   --kubernetes-version "$LATEST_VERSION" \
                   --region "$REGION" \
                   | jq -r '.addons[0].addonVersions[0].addonVersion')
           
-                if [ -z "$ADDON_VERSION" ] || [ "$ADDON_VERSION" == "null" ]; then
-                  echo "❌ Could not find a compatible version for $ADDON with Kubernetes $LATEST_VERSION"
+                if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" == "null" ]; then
+                  echo "❌ Could not find compatible version for $ADDON"
                   continue
                 fi
           
-                echo "⬆️ Upgrading $ADDON to version $ADDON_VERSION..."
+                echo "⬆️ Upgrading $ADDON from $CURRENT_VERSION to $LATEST_VERSION..."
                 aws eks update-addon \
                   --cluster-name "$CLUSTER_NAME" \
                   --addon-name "$ADDON" \
-                  --addon-version "$ADDON_VERSION" \
+                  --addon-version "$LATEST_VERSION" \
                   --resolve-conflicts OVERWRITE \
                   --region "$REGION"
           
-                echo "✅ Add-on $ADDON upgrade to version $ADDON_VERSION initiated."
+                echo "✅ Upgrade for $ADDON initiated."
+          
+                # Save current and new version as outputs
+                case "$ADDON" in
+                  coredns)
+                    echo "coredns_current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+                    echo "coredns_latest=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+                    ;;
+                  vpc-cni)
+                    echo "vpc_cni_current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+                    echo "vpc_cni_latest=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+                    ;;
+                  kube-proxy)
+                    echo "kube_proxy_current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+                    echo "kube_proxy_latest=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+                    ;;
+                  *)
+                    echo "ℹ️ Skipping outputs for untracked add-on: $ADDON"
+                    ;;
+                esac
               done
       
       - name: Upgrade EKS Node Groups (Rolling)
@@ -352,41 +386,30 @@ jobs:
         run: |
               aws eks update-kubeconfig --region $REGION --name "${{ needs.eks-upgrade.outputs.cluster_name }}"
 
-      - name: Collect Post-Upgrade Cluster Info
+      - name: Generate EKS Add-on Upgrade Report
+        id: write-report
         run: |
-          echo "📊 Collecting post-upgrade metrics..."
-          # EKS Cluster Version
-          aws eks describe-cluster --name "${{ needs.eks-upgrade.outputs.cluster_name }}" --region "$REGION" | jq '.cluster.version' > post_cluster_version.txt
-
-          # Add-on Versions
-          for ADDON in coredns vpc-cni kube-proxy; do
-            aws eks describe-addon --cluster-name "${{ needs.eks-upgrade.outputs.cluster_name }}" --addon-name "$ADDON" --region "$REGION" | jq '.addon.addonVersion' > post_${ADDON}_version.txt
-          done
-
-          # Node Info
-          kubectl get nodes -o wide > nodes_after.txt
-
-          # Pod Info
-          kubectl get pods -A > pods_after.txt
-
-      - name: Compare with Pre-upgrade Info
-        run: |
-          echo "# 🧾 EKS Upgrade Report" > eks-upgrade-report.md
-          echo "## ✅ EKS Version" >> eks-upgrade-report.md
-          echo "**Before**: ${{ needs.eks-upgrade.outputs.current_version }}" >> eks-upgrade-report.md
-          echo "**After**: $(cat post_cluster_version.txt)" >> eks-upgrade-report.md
-          echo "## 🔧 Add-on Versions" >> eks-upgrade-report.md
-          for ADDON in coredns vpc-cni kube-proxy; do
-            # Using the uppercase variable names from the eks-upgrade outputs if they were used in your Terraform; adjust as needed.
-            echo "**$ADDON** - Updated : $(cat post_${ADDON}_version.txt)" >> eks-upgrade-report.md
-          done
-          echo "## 🧠 Node Info (Post Upgrade)" >> eks-upgrade-report.md
-          cat nodes_after.txt >> eks-upgrade-report.md
-          echo "## 📦 Pod Inventory" >> eks-upgrade-report.md
-          cat pods_after.txt >> eks-upgrade-report.md
+                REPORT_FILE="eks-addon-upgrade-report.md"
+            
+                {
+                  echo "## 📊 EKS Add-on Upgrade Report"
+                  echo ""
+                  echo "**Cluster Name:** ${{ needs.upgrade.outputs.cluster_name }}"
+                  echo "**Kubernetes Version:** ${{ needs.upgrade.outputs.current_version }} → ${{ needs.upgrade.outputs.latest_version }}"
+                  echo ""
+                  echo "| Add-on      | Previous Version | Upgraded Version |"
+                  echo "|-------------|------------------|------------------|"
+                  echo "| CoreDNS     | ${{ needs.upgrade.outputs.coredns_current }} | ${{ needs.upgrade.outputs.coredns_latest }} |"
+                  echo "| VPC CNI     | ${{ needs.upgrade.outputs.vpc_cni_current }} | ${{ needs.upgrade.outputs.vpc_cni_latest }} |"
+                  echo "| Kube Proxy  | ${{ needs.upgrade.outputs.kube_proxy_current }} | ${{ needs.upgrade.outputs.kube_proxy_latest }} |"
+                  echo ""
+                  echo "_Report generated on $(date)_"
+                } > "$REPORT_FILE"
+            
+                echo "📄 Report saved to $REPORT_FILE"
 
       - name: Upload Report as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: eks-upgrade-report
-          path: eks-upgrade-report.md
+          path: eks-addon-upgrade-report.md
