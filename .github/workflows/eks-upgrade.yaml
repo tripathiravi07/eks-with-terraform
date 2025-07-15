@@ -416,10 +416,10 @@ jobs:
           echo "**coredns** - New : ${{ needs.eks-upgrade.outputs.kube_proxy_latest }}" >> eks-upgrade-report.md
 
           echo "## 🔧 Add-on Versions Previous" >> eks-upgrade-report.md
-          for ADDON in coredns vpc-cni kube-proxy; do
-            # Using the uppercase variable names from the eks-upgrade outputs if they were used in your Terraform; adjust as needed.
-            echo "**$ADDON** - Old : $(cat post_${ADDON}_version.txt)" >> eks-upgrade-report.md
-          done
+          echo "**coredns** - New : ${{ needs.eks-upgrade.outputs.coredns_version }}" >> eks-upgrade-report.md
+          echo "**vpc-cni** - New : ${{ needs.eks-upgrade.outputs.vpc_cni_version }}" >> eks-upgrade-report.md
+          echo "**coredns** - New : ${{ needs.eks-upgrade.outputs.kube_proxy_version }}" >> eks-upgrade-report.md
+
           echo "## 🧠 Node Info (Post Upgrade)" >> eks-upgrade-report.md
           cat nodes_after.txt >> eks-upgrade-report.md
           echo "## 📦 Pod Inventory" >> eks-upgrade-report.md
