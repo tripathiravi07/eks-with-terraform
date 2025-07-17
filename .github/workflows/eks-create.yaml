@@ -73,9 +73,10 @@ jobs:
        run: terraform validate
     
      - name: Run Checkov scan
+       working-directory: ./modules
        run: |
           checkov \
-            --directory ./modules \
+            --directory . \
             --quiet \
             --skip-check CKV_AWS_39,CKV_AWS_38
  
