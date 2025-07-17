@@ -40,9 +40,15 @@ jobs:
              curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.32.3/2025-04-17/bin/linux/amd64/kubectl
              chmod +x ./kubectl
              mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+
      - name: Update Kubeconfig
        run: |
               aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+
+     - name: Deleting NS
+       run: kubectl get namespace zero-downtime-sample -o json \
+                            | jq 'del(.spec.finalizers)' \
+                            | kubectl replace --raw "/api/v1/namespaces/zero-downtime-sample/finalize" -f -
      
      - name: Deleting K8S Resources
        working-directory: ./k8s
