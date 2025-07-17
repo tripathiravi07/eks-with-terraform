@@ -20,5 +20,6 @@ override.tf.json
 # Ignore sensitive or system-specific files
 .terraformrc
 terraform.rc
+terraform.*
 
 .DS_Store
