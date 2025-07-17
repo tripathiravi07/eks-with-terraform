@@ -30,7 +30,29 @@ jobs:
          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: ${{ env.REGION }}
- 
+
+     - name: Install Dependencies (kubectl, jq)
+       run: |
+             sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+             sudo apt-get install -y unzip jq curl 
+   
+             echo "Installing kubectl..."
+             curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.32.3/2025-04-17/bin/linux/amd64/kubectl
+             chmod +x ./kubectl
+             mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+     - name: Update Kubeconfig
+       run: |
+              aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+     
+     - name: Deleting K8S Resources
+       working-directory: ./k8s
+       run: |
+              ls -ltrh
+              kubectl delete -f .
+
+     - name: ⏳ After Deletion waiting for sometime to delete eks cluster.
+       run: sleep 500
+
      - name: Setup Terraform with specified version on the runner
        uses: hashicorp/setup-terraform@v2
        with:
