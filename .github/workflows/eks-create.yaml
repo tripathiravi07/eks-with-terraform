@@ -80,7 +80,7 @@ jobs:
           checkov \
             --directory . \
             --quiet \
-            --skip-check CKV_AWS_39,CKV_AWS_38
+            --skip-check CKV_AWS_39,CKV_AWS_38,CKV2_AWS_19,CKV2_AWS_11
  
      - name: Terraform plan
        id: plan

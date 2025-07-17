@@ -13,6 +13,9 @@ resource "aws_vpc" "eks-vpc" {
     team = local.team
   }
 }
+resource "aws_default_security_group" "default" {
+  vpc_id = aws_vpc.eks-vpc.id
+}
 
 #Adding Internet Gateway
 resource "aws_internet_gateway" "eks-vpc-IGW" {
