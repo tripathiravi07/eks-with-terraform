@@ -1,4 +1,4 @@
-name: Karpenter Node Group Update Check
+name: Karpenter Node Group Update Check and scaling
 
 # on:
 #     workflow_dispatch:
@@ -99,3 +99,5 @@ jobs:
           else
             echo "✅ All Karpenter nodes are on the correct Kubernetes version: $CURRENT_VERSION"
           fi 
+      - name: Scaling depployment
+        run: kubectl scale deployments.apps sample-app -n zero-downtime-sample --replicas 500
