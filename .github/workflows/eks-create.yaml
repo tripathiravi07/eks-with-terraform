@@ -45,6 +45,8 @@ jobs:
      - name: Install Checkov
        run: pip3 install checkov
      
+     - name: Check Checkov Version
+       run: checkov --version
  
      - name: Setup Terraform with specified version on the runner
        uses: hashicorp/setup-terraform@v2
