@@ -187,10 +187,17 @@ resource "aws_security_group" "karpenter_sg" {
   # Allow outbound to the internet (e.g., for pulling images, AWS APIs)
   egress {
     description = "Allow all outbound traffic"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    description = "Allow all VPC traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.0.0/16"]
   }
 
   tags = {

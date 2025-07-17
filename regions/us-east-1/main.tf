@@ -1,12 +1,10 @@
-##Creating VPC for EKS Cluster
+##Creating VPC for EKS Cluster.
 module "vpc_network" {
   source   = "../../modules/vpc"
   vpc_cidr = "10.0.0.0/16"
   public   = var.public
   private  = var.private
 }
-
-
 
 #Creating the EKS Cluster 
 module "eks_cluster" {

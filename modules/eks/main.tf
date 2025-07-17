@@ -1,3 +1,34 @@
+##KMS Key to enable encryption
+resource "aws_kms_key" "eks-with-terraform" {
+  description             = "KMS key for encrypting data"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+  is_enabled              = true
+  key_usage               = "ENCRYPT_DECRYPT"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM user permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "example-kms-key"
+    Environment = "dev"
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_role" "cluster" {
   name = var.cluster_iam_role_name
 
@@ -35,7 +66,13 @@ resource "aws_eks_cluster" "eks-terraform" {
   vpc_config {
     subnet_ids = var.subnet_ids
   }
-
+  encryption_config {
+    resources = ["secrets"]
+    provider {
+      key_arn = aws_kms_key.eks-with-terraform.arn
+    }
+  }
+  enabled_cluster_log_types = ["api", "audit", "authenticator","controllerManager","scheduler"]
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy
   ]
