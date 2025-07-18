@@ -2,6 +2,7 @@ name: Karpenter Node Group Update Check and scaling
 
 # on:
 #     workflow_dispatch:
+##
 on:
     workflow_run:
       workflows: [EKS Upgrade Checker and Upgrader]
