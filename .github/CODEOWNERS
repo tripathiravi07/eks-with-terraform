@@ -1,0 +1,11 @@
+# Global owners (all code)
+* @tripathiravi07
+
+# Terraform files: infrastructure logic
+*.tf @tripathiravi07 @your-org/terraform-team
+
+# Optional: modules directory (if you modularized code)
+modules/** @terraform-modules-team
+
+# Docs
+*.md @docs-team @tripathiravi07
