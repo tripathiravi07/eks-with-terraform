@@ -17,5 +17,4 @@ module "eks_cluster" {
   vpc-cni-version    = var.vpc_cni_v
   node_subnet_ids    = module.vpc_network.private_subnets
   vpc_id             = module.vpc_network.vpc_id
-  depends_on = [ module.vpc_network ]
 }
